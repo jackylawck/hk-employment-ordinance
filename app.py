@@ -231,11 +231,20 @@ def fallback_response(lang):
 # ==========================================
 # 5. Main UI Layout (Dual-Track)
 # ==========================================
-st.title("⚖️ Hong Kong Employment Ordinance (Cap. 57) Interactive Advisor")
+st.title("⚖️ Cap. 57 Employment Ordinance Full-Text Interactive Advisor")
 if is_zh:
     st.subheader("100% 決定性合規・零幻覺勞工法例檢索與審計系統")
 else:
     st.subheader("100% Deterministic Compliance · Zero-Hallucination Employment Law Advisor")
+
+# ------------ 💡 就是這裡！請把免責聲明插在中間 💡 ------------
+st.warning("""
+⚖️ **重要告示 & 免責聲明 / Important Notice & Disclaimer**
+
+* **繁體中文**: 本系統為自動化合規查詢與輔助工具，內容僅供參考，並不構成任何正式法律意見。由於法令條文可能隨時間修訂，且個案情境各有不同，本系統無法保證所有資訊之即時性與完全適用性。如有重要決策或爭議，請務必諮詢香港特別行政區政府勞工處或專業法律顧問。
+* **English**: This system is an automated compliance tool for general reference purposes only and does not constitute formal legal advice. As statutory provisions may evolve and individual case circumstances vary, the absolute real-time currency or applicability of the information cannot be guaranteed. For crucial decisions or disputes, please formally consult the Labour Department of the HKSAR Government or seek professional legal counsel.
+""")
+# -----------------------------------------------------------
 
 tab_chat, tab_audit = st.tabs(["💬 Chatbot (情境導航 / Scenario Advisor)", "📋 Executive Audit (高管合規審計清單)"])
 
