@@ -34,18 +34,18 @@ if 'messages' not in st.session_state:
 # Layer 1: 13 Core Chapters of the Concise Guide
 CHAPTERS_DB = {
     "ch1": {
-        "keys": ["適用範圍", "application", "scope", "418", "連續性合約", "continuous contract", "兼職", "part-time", "part time", "散工", "casual worker", "自僱", "self-employed", "假自僱", "番工", "返工"],
+        "keys": ["適用範圍", "application", "scope", "418", "468", "連續性合約", "continuous contract", "兼職", "part-time", "part time", "散工", "casual worker", "自僱", "self-employed", "假自僱", "番工", "返工"],
         "zh": {
             "title": "第 1 章：僱傭條例適用範圍",
-            "statute": "《僱傭條例》適用於所有受僱於僱傭合約的僱員。連續性合約（俗稱418）指僱員連續受僱於同一僱主4星期或以上，每星期最少工作18小時，可享有更多法定權益（如休息日、有薪年假、疾病津貼等）。",
-            "red_flag": "錯誤將實質僱傭關係包裝為「獨立承包人（假自僱）」，或刻意打斷 418 連續性合約以規避福利。",
-            "board_advice": "建立嚴格的非標準勞動力（Gig Workers/Contractors）合約審查機制，定期進行勞資關係實質性測試（Control Test, Integration Test）。"
+            "statute": "《僱傭條例》適用於所有受僱於僱傭合約的僱員。連續性合約已放寬為「468」機制：指僱員連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上，即享有更多法定權益（如休息日、有薪年假、疾病津貼等）。",
+            "red_flag": "錯誤將實質僱傭關係包裝為「獨立承包人（假自僱）」，或刻意打斷 468 連續性合約時數以規避福利。",
+            "board_advice": "因應「418」轉「468」的新法規，應立即重新審視兼職與散工的排班策略及工時結算演算法，防範潛在的集體勞資索償風險。"
         },
         "en": {
             "title": "Chapter 1: Application of the Employment Ordinance",
-            "statute": "The EO applies to all employees engaged under a contract of employment. A 'continuous contract' (418 rule) means an employee works for the same employer for 4 weeks or more, at least 18 hours per week, entitling them to statutory benefits.",
-            "red_flag": "Misclassifying employees as independent contractors (false self-employment) or artificially breaking the 418 continuous contract to evade benefits.",
-            "board_advice": "Establish strict contract review mechanisms for non-standard workforce. Regularly conduct substantive tests on employment relations (e.g., Control Test)."
+            "statute": "The EO applies to all employees engaged under a contract of employment. A 'continuous contract' (now the 468 rule) means an employee works for the same employer for 4 weeks or more, with at least 68 hours in total over 4 weeks, entitling them to statutory benefits.",
+            "red_flag": "Misclassifying employees as independent contractors (false self-employment) or artificially breaking the 468 continuous contract to evade benefits.",
+            "board_advice": "In response to the 418 to 468 transition, immediately review rostering strategies and time-tracking algorithms for non-standard workforce to mitigate class action risks."
         }
     },
     "ch2": {
@@ -133,9 +133,9 @@ CHAPTERS_DB = {
 # Layer 2: Cap. 57 Full Text Core Mapping (Sections & Parts)
 CAP57_SECTIONS_DB = [
     {
-        "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|兼職|散工|part(-|\s)time',
-        "zh": {"title": "Cap. 57 Section 3: 連續性合約的涵義與舉證責任", "statute": "凡受僱於同一僱主連續 4 星期或以上，每星期最少工作 18 小時，即屬連續性合約。爭議時，舉證責任（Onus of proof）在於僱主。", "red_flag": "僱主無法出示工時紀錄證明僱員非連續性受僱。", "board_advice": "實施數字化工時追蹤，確保舉證責任合規。"},
-        "en": {"title": "Cap. 57 Section 3: Meaning of continuous contract and onus of proof", "statute": "Employment for $\ge$ 4 weeks, $\ge$ 18 hours/week. In disputes, the onus of proof rests on the employer to prove it is NOT a continuous contract.", "red_flag": "Failure of the employer to produce working hour records to discharge the onus of proof.", "board_advice": "Implement digital time-tracking to ensure compliance regarding the onus of proof."}
+        "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|468|兼職|散工|part(-|\s)time',
+        "zh": {"title": "Cap. 57 Section 3: 連續性合約的涵義與舉證責任", "statute": "凡受僱於同一僱主連續 4 星期或以上，4 星期總工時滿 68 小時（468機制），即屬連續性合約。爭議時，舉證責任（Onus of proof）在於僱主。", "red_flag": "僱主無法出示完整工時紀錄以證明僱員非連續性受僱。", "board_advice": "實施數字化工時追蹤與動態警示機制，確保兼職工時數據具備完備的稽核軌跡，以符合最新舉證責任要求。"},
+        "en": {"title": "Cap. 57 Section 3: Meaning of continuous contract and onus of proof", "statute": "Employment for $\ge$ 4 weeks with a total of $\ge$ 68 hours (468 mechanism). In disputes, the onus of proof rests on the employer to prove it is NOT a continuous contract.", "red_flag": "Failure of the employer to produce comprehensive working hour records to discharge the onus of proof.", "board_advice": "Implement digital time-tracking with dynamic alerts to ensure a complete audit trail for part-time working hours."}
     },
     {
         "regex": r'(section|sec\.?|第)?\s*9\s*(條)?|即時解僱|summary dismissal|即炒|唔聽話|嚴重犯錯|偷嘢|打交|犯法|犯錯',
@@ -258,7 +258,7 @@ with tab_chat:
             st.markdown(msg["content"])
 
     # Chat input
-    if prompt := st.chat_input("Enter keywords, concepts, or Cap.57 Sections (e.g., '418', 'Section 9', 'layoff', '遣散費')..." if not is_zh else "請輸入關鍵字、口語或 Cap.57 條文（例如：'418', '即炒', '出糧', '大肚', '對沖'）..."):
+    if prompt := st.chat_input("Enter keywords, concepts, or Cap.57 Sections (e.g., '468', 'Section 9', 'layoff', '遣散費')..." if not is_zh else "請輸入關鍵字、口語或 Cap.57 條文（例如：'468', '即炒', '出糧', '大肚', '對沖'）..."):
         # Add user message to state
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
