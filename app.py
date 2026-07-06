@@ -164,28 +164,24 @@ with st.sidebar:
         st.session_state.lang = lang_choice
         st.rerun()
     
-    st.markdown("---")
+  st.markdown("---")
     is_zh = st.session_state.lang == '繁體中文'
     
     if is_zh:
-        st.markdown("### 👨‍💼 關於系統架構師")
+        st.markdown("### ⚙️ 系統設計與合規框架")
         st.markdown("""
-        * **高管經驗**: 超過 15 年的高階人力資源 (HR) 領導與組織變革經驗。
-        * **調解專家**: 16 年科技爭議解決與跨界專業調解 (Mediation) 經驗。
-        * **學術底蘊**: 香港中文大學法學碩士 (LLM, CUHK) 與社會學碩士。
-        * **國際認證**: ISO/IEC 42001 (AI管理體系), 27701, 27001 領先稽核員 (Lead Auditor)、Oracle GenAI Professional。
-        * **業界認可**: FHKIoD (香港董事學會資深會員)、MHKCS (香港電腦學會會員)。
-        * **治理框架**: 對齊 IAPP AIGP (Domain I to IV) 部署監督與合規實踐。
+        * **研發定位**: 專為企業管理層與人力資源團隊設計的自動化勞工法例檢索與合規稽核工具。
+        * **治理框架**: 系統架構嚴格對齊國際 **IAPP AIGP** 部署監督規範與 **ISO/IEC 42001** 管理體系思維。
+        * **設計原則**: 採用 100% 決定性邏輯（Deterministic Logic）架構，杜絕生成式幻覺，確保法定條文之準確性與可追溯性（Traceability）。
+        * **法規對齊**: 深度整合電子版香港法例《僱傭條例》（Cap. 57）主體條文與勞工處簡明指南範疇。
         """)
     else:
-        st.markdown("### 👨‍💼 About the Architect")
+        st.markdown("### ⚙️ System Design & Framework")
         st.markdown("""
-        * **HR Leadership**: Over 15 years of Senior HR Leadership & Organizational Change experience.
-        * **Dispute Resolution**: 16 years of Tech Dispute Resolution & Cross-sector Professional Mediation experience.
-        * **Academic Heritage**: Master of Laws (LLM, CUHK) & Master of Arts in Sociology.
-        * **Global Certifications**: ISO/IEC 42001, 27701, 27001 Lead Auditor, Oracle GenAI Professional.
-        * **Board & Industry Recognition**: FHKIoD (Fellow), MHKCS.
-        * **Governance Alignment**: IAPP AIGP (Domain I to IV) deployment oversight & compliance practices.
+        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives and HR professionals.
+        * **Governance**: Architecture strictly aligned with international **IAPP AIGP** deployment oversight and **ISO/IEC 42001** management systems.
+        * **Design Principle**: Built upon 100% deterministic logic to eliminate AI hallucinations, guaranteeing statutory accuracy and total traceability.
+        * **Statutory Alignment**: Fully integrated with the official text of the HK Employment Ordinance (Cap. 57) and Labour Department guidelines.
         """)
         
     st.markdown("---")
