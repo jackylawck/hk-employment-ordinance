@@ -164,7 +164,7 @@ with st.sidebar:
         st.session_state.lang = lang_choice
         st.rerun()
     
-  st.markdown("---")
+    st.markdown("---")
     is_zh = st.session_state.lang == '繁體中文'
     
     if is_zh:
@@ -186,7 +186,6 @@ with st.sidebar:
         
     st.markdown("---")
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
-
 # ==========================================
 # 4. Helper Functions for Logic
 # ==========================================
