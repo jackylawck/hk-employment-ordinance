@@ -187,7 +187,17 @@ with st.sidebar:
         """)
         
     st.markdown("---")
+    # 📢 內建 Microsoft Forms 的「治理級」回饋機制按鈕
+    st.info("### 📢 用戶體驗與持續治理回饋 / User Feedback")
+    st.link_button(
+        "📝 填寫意見回饋表單 (Feedback Form)" if is_zh else "📝 Submit Feedback & Suggestions", 
+        "https://forms.office.com/r/Uzu5pN7QpL",
+        type="primary"
+    )
+    
+    st.markdown("---")
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
+
 # ==========================================
 # 4. Helper Functions for Logic
 # ==========================================
@@ -247,7 +257,6 @@ st.warning("""
 """)
 # ----------------------------------------
 
-# 新增了 tab_calc
 tab_chat, tab_audit, tab_calc = st.tabs([
     "💬 Chatbot (情境導航 / Scenario Advisor)", 
     "📋 Executive Audit (高管合規審計清單)", 
@@ -255,7 +264,7 @@ tab_chat, tab_audit, tab_calc = st.tabs([
 ])
 
 # ------------------------------------------
-# Track A: Chatbot Interface
+# Track A: Chatbot Interface (中英雙語對照版)
 # ------------------------------------------
 with tab_chat:
     # Display chat messages
@@ -264,7 +273,7 @@ with tab_chat:
             st.markdown(msg["content"])
 
     # Chat input
-    if prompt := st.chat_input("Enter keywords, concepts, or Cap.57 Sections (e.g., '468', 'Section 9', 'layoff', '遣散費')..." if not is_zh else "請輸入關鍵字、口語或 Cap.57 條文（例如：'468', '即炒', '出糧', '大肚', '對沖'）..."):
+    if prompt := st.chat_input("Enter keywords, concepts, or Cap.57 Sections (e.g., '468', 'Section 9', 'layoff')..." if not is_zh else "請輸入關鍵字、口語或 Cap.57 條文（例如：'468', '即炒', '出糧', '大肚', '對沖'）..."):
         # Add user message to state
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -273,25 +282,37 @@ with tab_chat:
         # Process matching
         with st.chat_message("assistant"):
             matches = search_knowledge_base(prompt)
-            lang_key = "zh" if is_zh else "en"
             
             if not matches:
-                response = fallback_response(st.session_state.lang)
+                # 雙語對照式 Fallback 輸出
+                response = fallback_response('繁體中文') + "\n\n" + fallback_response('English')
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             else:
                 combined_response = ""
                 for match in matches:
-                    data = match["data"][lang_key]
+                    data_zh = match["data"]["zh"]
+                    data_en = match["data"]["en"]
                     
-                    st.info(f"**📖 {data['title']}**\n\n**Statutory Core / 法定核心:**\n{data['statute']}")
-                    st.error(f"**🚨 Red Flags / 違法紅線:**\n{data['red_flag']}")
-                    st.warning(f"**🛡️ Board-Level Governance / 高管與董事會治理建議:**\n{data['board_advice']}")
+                    # 💡 核心優化：Chatbot 界面強制同時輸出中英雙語對照
+                    st.info(
+                        f"**📖 {data_zh['title']} / {data_en['title']}**\n\n"
+                        f"**Statutory Core / 法定核心:**\n{data_zh['statute']}\n\n"
+                        f"**English statutory text:**\n{data_en['statute']}"
+                    )
+                    st.error(
+                        f"**🚨 Red Flags / 違法紅線:**\n{data_zh['red_flag']}\n\n"
+                        f"**English risk notice:**\n{data_en['red_flag']}"
+                    )
+                    st.warning(
+                        f"**🛡️ Board-Level Governance / 高管與董事會治理建議:**\n{data_zh['board_advice']}\n\n"
+                        f"**English governance advice:**\n{data_en['board_advice']}"
+                    )
                     st.markdown(f"[🔗 Verify on eLegislation / 官方查證連結](https://www.elegislation.gov.hk/hk/cap57)")
                     st.markdown("---")
                     
-                    # Store to history (using markdown formatting)
-                    combined_response += f"**{data['title']}**\n\n*Statute:* {data['statute']}\n\n*Red Flag:* {data['red_flag']}\n\n*Governance:* {data['board_advice']}\n\n---\n"
+                    # 儲存到對話歷史紀錄
+                    combined_response += f"**{data_zh['title']} / {data_en['title']}**\n\n*Statute:* {data_zh['statute']}\n\n*English:* {data_en['statute']}\n\n---\n"
                 
                 st.session_state.messages.append({"role": "assistant", "content": combined_response})
 
@@ -325,7 +346,6 @@ with tab_audit:
                 st.markdown("[🔗 Cap. 57 Link](https://www.elegislation.gov.hk/hk/cap57)")
             
             with col2:
-                # 3 Checklist items per chapter for demonstration
                 st.markdown("**Compliance Checklist:**")
                 c1 = st.checkbox(f"Policy Updated ({ch_id})", key=f"{ch_id}_c1")
                 c2 = st.checkbox(f"Staff Notified ({ch_id})", key=f"{ch_id}_c2")
