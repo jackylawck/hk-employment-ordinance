@@ -168,25 +168,26 @@ with st.sidebar:
     is_zh = st.session_state.lang == '繁體中文'
     
     if is_zh:
-        st.markdown("### ⚙️ 系統設計與合規框架")
+        st.markdown("### ⚙️ 系統設計與安全防護")
         st.markdown("""
-        * **研發定位**: 專為企業管理層與人力資源團隊設計的自動化勞工法例檢索與合規稽核工具。
-        * **治理框架**: 系統架構嚴格對齊國際 **IAPP AIGP** 部署監督規範與 **ISO/IEC 42001** 管理體系思維。
-        * **設計原則**: 採用 100% 決定性邏輯（Deterministic Logic）架構，杜絕生成式幻覺，確保法定條文之準確性與可追溯性（Traceability）。
-        * **法規對齊**: 深度整合電子版香港法例《僱傭條例》（Cap. 57）主體條文與勞工處簡明指南範疇。
+        * **研發定位**: 專為企業管理層設計的自動化勞工法例檢索與合規稽核工具。
+        * **治理框架**: 系統架構嚴格對齊 **IAPP AIGP** 部署監督規範與 **ISO/IEC 42001** 管理體系思維。
+        * **架構安全性**: **100% 無 AI / 無 RAG 技術**。採用純決定性代碼架構，杜絕生成式大模型胡言亂語的「AI 幻覺」風險。
+        * **數據零留底**: 系統無後台數據庫，不儲存任何查詢歷史。網頁一經關閉，所有輸入數據立即在雲端**全部歸零**，確保企業人事隱私絕對安全。
+        * **法規對齊**: 深度整合官方《僱傭條例》（Cap. 57）主體條文與最新 **「468機制」**。
         """)
     else:
-        st.markdown("### ⚙️ System Design & Framework")
+        st.markdown("### ⚙️ System Design & Security")
         st.markdown("""
-        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives and HR professionals.
-        * **Governance**: Architecture strictly aligned with international **IAPP AIGP** deployment oversight and **ISO/IEC 42001** management systems.
-        * **Design Principle**: Built upon 100% deterministic logic to eliminate AI hallucinations, guaranteeing statutory accuracy and total traceability.
-        * **Statutory Alignment**: Fully integrated with the official text of the HK Employment Ordinance (Cap. 57) and Labour Department guidelines.
+        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives.
+        * **Governance**: Architecture strictly aligned with **IAPP AIGP** deployment oversight and **ISO/IEC 42001** management systems.
+        * **Core Technology**: **100% AI-Free / No RAG**. Built entirely on deterministic logic to fully eliminate the risk of generative "AI hallucinations."
+        * **Data Sovereignty**: Zero back-end databases. No query histories are recorded. All user inputs are **completely wiped from memory** upon closing the page.
+        * **Statutory Alignment**: Fully integrated with the official text of the HK Employment Ordinance (Cap. 57) and the latest **468 mechanism**.
         """)
         
     st.markdown("---")
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
-
 # ==========================================
 # 4. Helper Functions for Logic
 # ==========================================
