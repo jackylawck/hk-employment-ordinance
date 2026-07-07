@@ -229,7 +229,7 @@ def fallback_response(lang):
         """
 
 # ==========================================
-# 5. Main UI Layout (Dual-Track)
+# 5. Main UI Layout (Three-Track)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Full-Text Interactive Advisor")
 if is_zh:
@@ -246,7 +246,12 @@ st.warning("""
 """)
 # ----------------------------------------
 
-tab_chat, tab_audit = st.tabs(["💬 Chatbot (情境導航 / Scenario Advisor)", "📋 Executive Audit (高管合規審計清單)"])
+# 新增了 tab_calc
+tab_chat, tab_audit, tab_calc = st.tabs([
+    "💬 Chatbot (情境導航 / Scenario Advisor)", 
+    "📋 Executive Audit (高管合規審計清單)", 
+    "🧮 ADW 713 計算機 (Salary Calculator)"
+])
 
 # ------------------------------------------
 # Track A: Chatbot Interface
@@ -341,3 +346,73 @@ with tab_audit:
         st.error("⚠️ Actions Required: Unchecked items present potential legal and operational risks." if not is_zh else "⚠️ 需採取行動：未勾選項目存在潛在的法律及營運風險，請盡速由法務/HR總監介入處理。")
     else:
         st.success("✅ Fully Compliant based on internal audit parameters." if not is_zh else "✅ 內部審計顯示為完全合規狀態。")
+
+# ------------------------------------------
+# Track C: ADW 713 Calculator
+# ------------------------------------------
+with tab_calc:
+    if is_zh:
+        st.markdown("### 🧮 12個月平均工資 (ADW) 法定權益計算機")
+        st.info("根據《2007年僱傭(修訂)條例》，法定權益（如假日薪酬、年假薪酬、疾病津貼、產假及侍產假等）須以12個月的平均工資來計算。在計算平均工資時，須剔除「不予計算在內」的期間（如未獲付全薪的假期）及該期間的工資。")
+        
+        col_in1, col_in2 = st.columns(2)
+        with col_in1:
+            total_wages = st.number_input("1. 過去 12 個月內賺取的總工資 ($)", min_value=0.0, value=150000.0, step=1000.0)
+            total_days = st.number_input("2. 該 12 個月內的總日數 (通常為 365 或 366 日)", min_value=1, value=365, step=1)
+        with col_in2:
+            disregarded_days = st.number_input("3. 須剔除的「不予計算在內」日數 (例如: 無薪假、獲付五分四工資的病假)", min_value=0, value=0, step=1)
+            disregarded_wages = st.number_input("4. 在上述剔除期間內所獲支付的工資 ($)", min_value=0.0, value=0.0, step=100.0)
+
+        st.markdown("---")
+        if total_days > disregarded_days:
+            adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
+            st.metric("每日平均工資 (Average Daily Wage, ADW)", f"${adw:.2f}")
+            
+            st.markdown("#### ⚖️ 法定權益每日補償參考：")
+            col_res1, col_res2 = st.columns(2)
+            col_res1.success(f"**疾病津貼 / 產假 / 侍產假 (五分之四):**\n### ${adw * 0.8:.2f} / 日")
+            col_res2.success(f"**假日薪酬 / 年假薪酬 / 代通知金 (全薪):**\n### ${adw:.2f} / 日")
+        else:
+            st.error("⚠️ 錯誤：剔除日數不可大於或等於總日數。")
+
+        st.markdown("---")
+        st.markdown("#### 🔗 勞工處官方網站計算機連結 (Official Calculators)")
+        st.markdown("""
+        為確保最高級別之合規防禦，遇到複雜計糧個案時，建議主管與 HR 直接點擊以下官方連結進行覆核：
+        * [勞工處：法定權益參考計算機 (Statutory Employment Entitlements Reference Calculator)](https://www.labour.gov.hk/tc/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
+        * [勞工處：法定最低工資參考計算機 (Statutory Minimum Wage Reference Calculator)](https://www.labour.gov.hk/tc/erb/smw_cal/smw_cal.html)
+        * [勞工處：平均每月工資參考計算機 (Average Monthly Salary Reference Calculator)](https://www.labour.gov.hk/tc/labour/avgMonthSalaryCalculator.htm)
+        """)
+
+    else:
+        st.markdown("### 🧮 12-Month Average Daily Wage (ADW) Calculator")
+        st.info("Under the Employment (Amendment) Ordinance 2007, statutory entitlements must be calculated on the basis of the 12-month average wages. Periods and wages that fall under the 'disregarding provisions' shall be excluded.")
+        
+        col_in1, col_in2 = st.columns(2)
+        with col_in1:
+            total_wages = st.number_input("1. Total wages earned in the past 12 months ($)", min_value=0.0, value=150000.0, step=1000.0)
+            total_days = st.number_input("2. Total number of days in the 12-month period (e.g., 365)", min_value=1, value=365, step=1)
+        with col_in2:
+            disregarded_days = st.number_input("3. Number of days to be disregarded (e.g., unpaid leave)", min_value=0, value=0, step=1)
+            disregarded_wages = st.number_input("4. Wages paid for the disregarded periods ($)", min_value=0.0, value=0.0, step=100.0)
+
+        st.markdown("---")
+        if total_days > disregarded_days:
+            adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
+            st.metric("Average Daily Wage (ADW)", f"${adw:.2f}")
+            
+            st.markdown("#### ⚖️ Statutory Entitlements Reference:")
+            col_res1, col_res2 = st.columns(2)
+            col_res1.success(f"**Sickness Allowance / Maternity / Paternity (4/5ths):**\n### ${adw * 0.8:.2f} / day")
+            col_res2.success(f"**Holiday / Annual Leave / Payment in lieu of Notice (Full Pay):**\n### ${adw:.2f} / day")
+        else:
+            st.error("⚠️ Error: Disregarded days cannot be equal to or greater than total days.")
+
+        st.markdown("---")
+        st.markdown("#### 🔗 Official Labour Department Calculators")
+        st.markdown("""
+        For ultimate compliance assurance in complex payroll scenarios, HR professionals are advised to cross-verify using the official tools:
+        * [Statutory Employment Entitlements Reference Calculator](https://www.labour.gov.hk/tc/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
+        * [Statutory Minimum Wage Reference Calculator](https://www.labour.gov.hk/tc/erb/smw_cal/smw_cal.html)
+        * [Average Monthly Salary Reference Calculator](https://www.labour.gov.hk/tc/labour/avgMonthSalaryCalculator.htm)
+        """)
