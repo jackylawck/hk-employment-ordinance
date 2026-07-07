@@ -25,13 +25,14 @@ st.markdown("""
 # Initialize Session State
 if 'lang' not in st.session_state:
     st.session_state.lang = '繁體中文'
+if 'role' not in st.session_state:
+    st.session_state.role = 'HR Director / 法務與人力資源總監'
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
 # 2. Dual-Layer Knowledge Base (Cap. 57 & 13 Chapters)
 # ==========================================
-# Layer 1: 13 Core Chapters of the Concise Guide
 CHAPTERS_DB = {
     "ch1": {
         "keys": ["適用範圍", "application", "scope", "418", "468", "連續性合約", "continuous contract", "兼職", "part-time", "part time", "散工", "casual worker", "自僱", "self-employed", "假自僱", "番工", "返工"],
@@ -130,7 +131,6 @@ CHAPTERS_DB = {
     }
 }
 
-# Layer 2: Cap. 57 Full Text Core Mapping (Sections & Parts)
 CAP57_SECTIONS_DB = [
     {
         "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|468|兼職|散工|part(-|\s)time',
@@ -165,7 +165,18 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("---")
+    
+    # 🌟 新增：持份者視角切換 (Stakeholder Role Mapping)
+    st.header("👥 持份者視角 / Stakeholder Role")
+    role_options = ['HR Director / 法務與人力資源總監', 'Line Manager / 前線部門主管']
+    role_choice = st.selectbox("Select Role / 選擇角色視角", role_options, index=role_options.index(st.session_state.role))
+    if role_choice != st.session_state.role:
+        st.session_state.role = role_choice
+        st.rerun()
+    
+    st.markdown("---")
     is_zh = st.session_state.lang == '繁體中文'
+    is_hr_director = 'HR Director' in st.session_state.role
     
     if is_zh:
         st.markdown("### ⚙️ 系統設計與安全防護")
@@ -176,6 +187,11 @@ with st.sidebar:
         * **數據零留底**: 系統無後台數據庫，不儲存任何查詢歷史。網頁一經關閉，所有輸入數據立即在雲端**全部歸零**，確保企業人事隱私絕對安全。
         * **法規對齊**: 深度整合官方《僱傭條例》（Cap. 57）主體條文與最新 **「468機制」**。
         """)
+        # 顯示角色的額外提示
+        if is_hr_director:
+            st.success("🛡️ **當前視角 (HR Director)**: 系統將著重顯示戰略性風險預測、董事會合規建議與政策修訂指引。")
+        else:
+            st.info("🎯 **當前視角 (Line Manager)**: 系統將著重顯示前線排班違規紅線、即時紀律處分邊界與上報(Escalation)提示。")
     else:
         st.markdown("### ⚙️ System Design & Security")
         st.markdown("""
@@ -185,6 +201,10 @@ with st.sidebar:
         * **Data Sovereignty**: Zero back-end databases. No query histories are recorded. All user inputs are **completely wiped from memory** upon closing the page.
         * **Statutory Alignment**: Fully integrated with the official text of the HK Employment Ordinance (Cap. 57) and the latest **468 mechanism**.
         """)
+        if is_hr_director:
+            st.success("🛡️ **Current Role (HR Director)**: Focus is on strategic risk forecasting, board-level compliance, and policy revision.")
+        else:
+            st.info("🎯 **Current Role (Line Manager)**: Focus is on rostering red flags, immediate disciplinary boundaries, and escalation protocols.")
         
     st.markdown("---")
     # 📢 內建 Microsoft Forms 的「治理級」回饋機制按鈕
@@ -198,9 +218,32 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
 
+
 # ==========================================
-# 4. Helper Functions for Logic
+# 4. Helper Functions for Logic (加入硬性邊界控制)
 # ==========================================
+def check_out_of_scope(query, lang):
+    """
+    🌟 新增：硬性邊界控制 (Out-of-Scope Blocking)
+    """
+    out_of_scope_keywords = ["報稅", "tax", "稅務", "簽證", "visa", "移民", "immigration", "強積金投資", "mpf investment", "刑事", "criminal law", "離婚", "divorce"]
+    query_lower = query.lower()
+    
+    if any(keyword in query_lower for keyword in out_of_scope_keywords):
+        if lang == '繁體中文':
+            return """
+            ⚠️ **超出審查範圍 (Out of Scope)**
+            
+            您提及的問題（如稅務、入境簽證、強積金投資策略或一般刑事法）超出了《僱傭條例》（Cap. 57）的涵蓋範圍。本系統為堅守「100% 決定性合規」原則，**拒絕提供範圍外的推測性建議**以防範合規幻覺。請直接向稅務局、入境處或強積金管理局查詢。
+            """
+        else:
+            return """
+            ⚠️ **Out of Scope**
+            
+            The issue you mentioned (e.g., tax, visas, MPF investments, or general criminal law) is outside the scope of the Hong Kong Employment Ordinance (Cap. 57). To maintain 100% compliance accuracy, **this system strictly refuses to generate speculative advice beyond its statutory framework**. Please consult the IRD, ImmD, or MPFA directly.
+            """
+    return None
+
 def search_knowledge_base(query):
     query_lower = query.lower()
     results = []
@@ -259,7 +302,7 @@ st.warning("""
 
 tab_chat, tab_audit, tab_calc = st.tabs([
     "💬 Chatbot (情境導航 / Scenario Advisor)", 
-    "📋 Executive Audit (高管合規審計清單)", 
+    "📋 Executive Audit (動態合規審計)", 
     "🧮 ADW 713 計算機 (Salary Calculator)"
 ])
 
@@ -281,54 +324,106 @@ with tab_chat:
 
         # Process matching
         with st.chat_message("assistant"):
-            matches = search_knowledge_base(prompt)
+            # 1. 檢查硬性邊界 (Out of Scope Blocking)
+            oos_response = check_out_of_scope(prompt, st.session_state.lang)
             
-            if not matches:
-                # 雙語對照式 Fallback 輸出
-                response = fallback_response('繁體中文') + "\n\n" + fallback_response('English')
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
+            if oos_response:
+                st.markdown(oos_response)
+                st.session_state.messages.append({"role": "assistant", "content": oos_response})
             else:
-                combined_response = ""
-                for match in matches:
-                    data_zh = match["data"]["zh"]
-                    data_en = match["data"]["en"]
-                    
-                    # 💡 核心優化：Chatbot 界面強制同時輸出中英雙語對照
-                    st.info(
-                        f"**📖 {data_zh['title']} / {data_en['title']}**\n\n"
-                        f"**Statutory Core / 法定核心:**\n{data_zh['statute']}\n\n"
-                        f"**English statutory text:**\n{data_en['statute']}"
-                    )
-                    st.error(
-                        f"**🚨 Red Flags / 違法紅線:**\n{data_zh['red_flag']}\n\n"
-                        f"**English risk notice:**\n{data_en['red_flag']}"
-                    )
-                    st.warning(
-                        f"**🛡️ Board-Level Governance / 高管與董事會治理建議:**\n{data_zh['board_advice']}\n\n"
-                        f"**English governance advice:**\n{data_en['board_advice']}"
-                    )
-                    st.markdown(f"[🔗 Verify on eLegislation / 官方查證連結](https://www.elegislation.gov.hk/hk/cap57)")
-                    st.markdown("---")
-                    
-                    # 儲存到對話歷史紀錄
-                    combined_response += f"**{data_zh['title']} / {data_en['title']}**\n\n*Statute:* {data_zh['statute']}\n\n*English:* {data_en['statute']}\n\n---\n"
+                matches = search_knowledge_base(prompt)
                 
-                st.session_state.messages.append({"role": "assistant", "content": combined_response})
+                if not matches:
+                    # 雙語對照式 Fallback 輸出
+                    response = fallback_response('繁體中文') + "\n\n" + fallback_response('English')
+                    st.markdown(response)
+                    st.session_state.messages.append({"role": "assistant", "content": response})
+                else:
+                    combined_response = ""
+                    for match in matches:
+                        data_zh = match["data"]["zh"]
+                        data_en = match["data"]["en"]
+                        
+                        st.info(
+                            f"**📖 {data_zh['title']} / {data_en['title']}**\n\n"
+                            f"**Statutory Core / 法定核心:**\n{data_zh['statute']}\n\n"
+                            f"**English statutory text:**\n{data_en['statute']}"
+                        )
+                        st.error(
+                            f"**🚨 Red Flags / 違法紅線:**\n{data_zh['red_flag']}\n\n"
+                            f"**English risk notice:**\n{data_en['red_flag']}"
+                        )
+                        
+                        # 🎭 根據角色動態調整 Governance 顯示文字的開頭標籤
+                        gov_label_zh = "🛡️ Board-Level Governance / 高管與董事會治理建議:" if 'HR Director' in st.session_state.role else "🎯 Operational Execution / 前線營運與通報要求:"
+                        gov_label_en = "**English governance advice:**" if 'HR Director' in st.session_state.role else "**English operational requirement:**"
+                        
+                        st.warning(
+                            f"**{gov_label_zh}**\n{data_zh['board_advice']}\n\n"
+                            f"{gov_label_en}\n{data_en['board_advice']}"
+                        )
+                        st.markdown(f"[🔗 Verify on eLegislation / 官方查證連結](https://www.elegislation.gov.hk/hk/cap57)")
+                        st.markdown("---")
+                        
+                        # 儲存到對話歷史紀錄
+                        combined_response += f"**{data_zh['title']} / {data_en['title']}**\n\n*Statute:* {data_zh['statute']}\n\n*English:* {data_en['statute']}\n\n---\n"
+                    
+                    st.session_state.messages.append({"role": "assistant", "content": combined_response})
 
 # ------------------------------------------
-# Track B: Executive Audit Checklists
+# Track B: Executive Audit Checklists (動態合規審計表單)
 # ------------------------------------------
 with tab_audit:
     if is_zh:
-        st.markdown("### 📊 企業級合規自我審查 (Pre-Deployment Audit Scorecard)")
-        st.caption("基於 AIGP 部署監督理念：將靜態指引轉化為 100% 決定性檢查工具，確保企業 HR 政策完全符合 Cap. 57。")
+        st.markdown("### 📊 企業級動態合規自我審查 (Dynamic Pre-Deployment Audit)")
+        st.caption("基於 AIGP 部署監督理念：結合營運場景進行風險前置判斷，確保企業 HR 政策完全符合 Cap. 57。")
     else:
-        st.markdown("### 📊 Enterprise-Grade Compliance Audit Scorecard")
-        st.caption("Aligned with AIGP Deployment Oversight: Transforming static guidelines into 100% deterministic checklists to ensure full Cap. 57 compliance.")
+        st.markdown("### 📊 Enterprise-Grade Dynamic Compliance Audit")
+        st.caption("Aligned with AIGP Deployment Oversight: Context-aware risk profiling ensuring full Cap. 57 compliance.")
 
     lang_key = "zh" if is_zh else "en"
     
+    # 🌟 新增：動態審計前置脈絡 (Context Input)
+    with st.form("audit_context_form"):
+        st.markdown("#### 📥 " + ("第一步：輸入審計場景脈絡 (Input Audit Context)" if is_zh else "Step 1: Input Audit Context"))
+        col1, col2 = st.columns(2)
+        with col1:
+            emp_type = st.selectbox(
+                "僱員合約類型 (Employment Type)" if is_zh else "Employment Type",
+                ["全職/連續性合約 (Continuous Contract / 468)", "兼職/散工 (Casual / <468)", "獨立承包人 (Independent Contractor)"]
+            )
+        with col2:
+            emp_tenure = st.selectbox(
+                "服務年資 (Tenure)" if is_zh else "Tenure",
+                ["未滿 3 個月 (< 3 months)", "滿 24 個月 (>= 24 months)", "滿 5 年 (>= 5 years)"]
+            )
+        submit_audit = st.form_submit_button("執行合規診斷 🔍 (Execute Audit)" if is_zh else "Execute Audit 🔍")
+
+    # 🌟 動態彈出對應的重大合規警告 (Dynamic Warning Logic)
+    if submit_audit:
+        st.markdown("---")
+        st.markdown("#### 🚨 " + ("第二步：動態合規風險報告 (Dynamic Risk Report)" if is_zh else "Step 2: Dynamic Risk Report"))
+        
+        has_critical_risk = False
+        
+        if emp_type == "獨立承包人 (Independent Contractor)":
+            has_critical_risk = True
+            st.error("🔴 **假自僱風險 (False Self-Employment Risk)**: 若對該員工具備實質控制權（Control test），法庭仍會將其視為僱員，企業將面臨逃避強積金及法定福利之刑事檢控。（參照第 1 章）" if is_zh else "🔴 **False Self-Employment Risk**: If substantial control exists, courts will deem them employees. Severe criminal risk for evading MPF and statutory benefits. (Ref Chapter 1)")
+            
+        if emp_tenure == "滿 24 個月 (>= 24 months)" and emp_type != "獨立承包人 (Independent Contractor)":
+            has_critical_risk = True
+            st.warning("⚠️ **不合理解僱風險 (Unreasonable Dismissal Risk)**: 該員工受僱滿 24 個月，任何解僱行動必須具備正當理由（能力、行為、冗員等），否則面臨勞審處索償。（參照第 12 章）" if is_zh else "⚠️ **Unreasonable Dismissal Risk**: With >= 24 months tenure, any termination must have a valid statutory reason (conduct, capability, redundancy) to avoid Labour Tribunal claims. (Ref Chapter 12)")
+            
+        if emp_tenure == "滿 5 年 (>= 5 years)" and emp_type != "獨立承包人 (Independent Contractor)":
+            has_critical_risk = True
+            st.error("🔴 **長期服務金負債 (LSP Liability Risk)**: 該員工年資達 5 年，非因嚴重過失解僱時，企業必須撥備並支付長期服務金 (LSP)。（參照第 13 章）" if is_zh else "🔴 **Long Service Payment (LSP) Liability**: With >= 5 years tenure, termination (other than summary dismissal) triggers statutory LSP payout requirements. (Ref Chapter 13)")
+            
+        if not has_critical_risk:
+            st.success("✅ 目前設定未觸發特高風險紅線，請繼續完成下方常規審計清單。" if is_zh else "✅ No critical high-risk triggers detected in context. Proceed with the standard audit checklist below.")
+
+    st.markdown("---")
+    st.markdown("#### 📋 " + ("第三步：常規章節合規自查清單 (Standard Chapter Checklist)" if is_zh else "Step 3: Standard Chapter Checklist"))
+
     # Audit logic: Calculate compliance rate
     total_checks = 0
     passed_checks = 0
@@ -364,7 +459,7 @@ with tab_audit:
     st.progress(overall_score / 100)
     
     if overall_score < 100:
-        st.error("⚠️ Actions Required: Unchecked items present potential legal and operational risks." if not is_zh else "⚠️ 需採取行動：未勾選項目存在潛在的法律及營運風險，請盡速由法務/HR總監介入處理。")
+        st.error("⚠️ Actions Required: Unchecked items present potential legal and operational risks." if not is_zh else "⚠️ 需採取行動：未勾選項目存在潛在的法律及營運風險，請盡速由主管介入處理。")
     else:
         st.success("✅ Fully Compliant based on internal audit parameters." if not is_zh else "✅ 內部審計顯示為完全合規狀態。")
 
