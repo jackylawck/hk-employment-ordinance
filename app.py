@@ -1,6 +1,5 @@
 import streamlit as st
 import re
-from datetime import datetime
 
 # ==========================================
 # 1. Page Configuration & UI Initialization
@@ -25,10 +24,10 @@ st.markdown("""
 # Initialize Session State
 if 'lang' not in st.session_state:
     st.session_state.lang = '繁體中文'
-if 'role' not in st.session_state:
-    st.session_state.role = 'HR Director / 法務與人力資源總監'
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+
+is_zh = st.session_state.lang == '繁體中文'
 
 # ==========================================
 # 2. Dual-Layer Knowledge Base (Cap. 57 & 13 Chapters)
@@ -40,28 +39,28 @@ CHAPTERS_DB = {
             "title": "第 1 章：僱傭條例適用範圍",
             "statute": "《僱傭條例》適用於所有受僱於僱傭合約的僱員。連續性合約已放寬為「468」機制：指僱員連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上，即享有更多法定權益（如休息日、有薪年假、疾病津貼等）。",
             "red_flag": "錯誤將實質僱傭關係包裝為「獨立承包人（假自僱）」，或刻意打斷 468 連續性合約時數以規避福利。",
-            "board_advice": "因應「418」轉「468」的新法規，應立即重新審視兼職與散工的排班策略及工時結算演算法，防範潛在的集體勞資索償風險。"
+            "gov_advice": "【董事會管治】應立即重新審視兼職與散工的排班策略及工時結算演算法，防範潛在的集體勞資索償風險。\n\n【前線營運提示】請確實記錄兼職員工的上下班時間，切勿口頭要求員工「提早下班」以惡意避開 468 工時門檻。"
         },
         "en": {
             "title": "Chapter 1: Application of the Employment Ordinance",
             "statute": "The EO applies to all employees engaged under a contract of employment. A 'continuous contract' (now the 468 rule) means an employee works for the same employer for 4 weeks or more, with at least 68 hours in total over 4 weeks, entitling them to statutory benefits.",
             "red_flag": "Misclassifying employees as independent contractors (false self-employment) or artificially breaking the 468 continuous contract to evade benefits.",
-            "board_advice": "In response to the 418 to 468 transition, immediately review rostering strategies and time-tracking algorithms for non-standard workforce to mitigate class action risks."
+            "gov_advice": "[Board-Level Governance] Immediately review rostering strategies and time-tracking algorithms for non-standard workforce to mitigate class action risks.\n\n[Line Manager Actions] Ensure accurate time-tracking for part-timers. Do not informally ask staff to clock out early to evade the 468 threshold."
         }
     },
     "ch2": {
         "keys": ["僱傭合約", "contracts of employment", "contract", "合約", "更改合約", "variation", "簽約", "試用期", "probation", "轉制", "減薪", "pay cut", "調職"],
         "zh": {
             "title": "第 2 章：僱傭合約",
-            "statute": "僱傭合約可以書面或口頭訂立。僱主在僱員就職前，必須向僱員詳細說明僱傭條件。如無僱員同意，僱主不得單方面更改合約條款。",
+            "statute": "僱傭合約可以書面或口頭訂立。僱主在僱員就職前，必須向僱員詳細說明僱用條件。如無僱員同意，僱主不得單方面更改合約條款。",
             "red_flag": "未經僱員同意單方面更改合約（如減薪、更改工作地點），構成不合理更改僱傭合約條款。",
-            "board_advice": "所有合約變更必須落實書面同意（Mutual Consent）。制定標準化入職與合約變更 SOP，確保資訊透明度。"
+            "gov_advice": "【董事會管治】所有合約變更必須落實書面同意（Mutual Consent），制定標準化入職與合約變更 SOP，確保資訊透明度。\n\n【前線營運提示】任何崗位調動或薪酬調整，在系統執行前必須確認已收妥員工簽署的變更同意書。"
         },
         "en": {
             "title": "Chapter 2: Contracts of Employment",
             "statute": "Contracts can be written or oral. Employers must clearly inform employees of the conditions of employment before employment begins. Unilateral variation of terms is not permitted without consent.",
             "red_flag": "Unilateral variation of contract terms (e.g., pay cut, relocation) without employee consent, constituting unreasonable variation.",
-            "board_advice": "Ensure all contract variations are documented with mutual written consent. Develop standardized SOPs for onboarding and contract changes."
+            "gov_advice": "[Board-Level Governance] Ensure all contract variations are documented with mutual written consent. Develop standardized SOPs for onboarding and contract changes.\n\n[Line Manager Actions] Do not implement any relocation or pay adjustment without a signed mutual consent form from the employee."
         }
     },
     "ch3": {
@@ -70,145 +69,88 @@ CHAPTERS_DB = {
             "title": "第 3 章：工資",
             "statute": "工資包括薪金、津貼、小費及服務費（Tips and service charges）。工資必須在工資期屆滿後 7 天內支付。除法例明文規定（如缺勤、損壞僱主貨品上限$300）外，嚴禁扣薪。",
             "red_flag": "遲發工資超過 7 天，或以「表現不佳」等非法定理由非法扣減員工工資。",
-            "board_advice": "實施自動化工資結算與合規審計系統。董事會應將「欠薪」視為最高級別之營運及法律風險（涉及刑事責任）。"
+            "gov_advice": "【董事會管治】實施自動化工資結算與合規審計系統。董事會應將「欠薪」視為最高級別之營運及法律風險（涉及刑事責任）。\n\n【前線營運提示】即使員工犯錯或造成公司財產損失，絕不可私自扣減工資作為處罰，每次損壞扣款上限硬性規定為 HK$300。"
         },
         "en": {
             "title": "Chapter 3: Wages",
             "statute": "Wages include salary, allowances, tips, and service charges. Wages must be paid within 7 days after the end of the wage period. Deductions are strictly limited by law (e.g., absence, damage to goods capped at $300).",
             "red_flag": "Paying wages later than 7 days, or making illegal deductions for non-statutory reasons like 'poor performance'.",
-            "board_advice": "Implement automated payroll and compliance audit systems. The Board must treat 'unpaid wages' as a top-tier operational and legal risk (criminal liability)."
+            "gov_advice": "[Board-Level Governance] Implement automated payroll and compliance audit systems. The Board must treat 'unpaid wages' as a top-tier operational and legal risk (criminal liability).\n\n[Line Manager Actions] Never deduct wages as a punitive measure for poor performance. Damage deduction is strictly capped at HK$300 per instance."
         }
     },
-    "ch4": {
-        "keys": ["休息日", "rest days", "day off", "放假", "例假", "off", "放off", "七休一", "買假", "逼人返工"],
-        "zh": {"title": "第 4 章：休息日", "statute": "連續性合約僱員每 7 天可享有不少於 1 天休息日。休息日屬自願性質工作，僱主不得強迫。", "red_flag": "強迫僱員在休息日工作或以工資代替休息日（買假）。", "board_advice": "監控工時與排班系統，確保排班演算法不會自動違反 7休1 法定要求。"},
-        "en": {"title": "Chapter 4: Rest Days", "statute": "Employees under a continuous contract are entitled to at least 1 rest day in every period of 7 days. Compelling employees to work on rest days is prohibited.", "red_flag": "Forcing employees to work on rest days or buying out rest days.", "board_advice": "Monitor rostering systems to ensure scheduling algorithms do not automatically violate the 1-in-7 rest day rule."}
-    },
-    "ch5": {
-        "keys": ["法定假日", "statutory holidays", "勞工假", "public holidays", "bank holiday", "紅日", "補假", "PH", "SH"],
-        "zh": {"title": "第 5 章：法定假日", "statute": "所有僱員均享有法定假日（勞工假）。如受僱滿3個月，可享有薪法定假日。不得以款項代替發放法定假日。", "red_flag": "以薪金買斷法定假日，或未在法定限期內安排補假。", "board_advice": "將法定假日與公眾假期（Bank Holidays）的政策差異清晰列明於員工手冊，並設定系統硬性防呆機制。"},
-        "en": {"title": "Chapter 5: Statutory Holidays", "statute": "All employees are entitled to statutory holidays. If employed for 3 months, they are entitled to holiday pay. Buy-out of statutory holidays is strictly prohibited.", "red_flag": "Buying out statutory holidays with payment or failing to arrange substituted holidays within the legal timeframe.", "board_advice": "Clearly differentiate Statutory and Public Holidays in the employee handbook with system-level hardstops."}
-    },
-    "ch6": {
-        "keys": ["有薪年假", "paid annual leave", "annual leave", "年假", "AL", "大假", "清假", "辭職扣假"],
-        "zh": {"title": "第 6 章：有薪年假", "statute": "受僱滿1年可享有 7 至 14 天有薪年假。年假薪酬應以過去12個月的每日平均工資（ADW）計算。", "red_flag": "錯誤計算 ADW（未計入佣金或津貼），或拒絕批出法定年假。", "board_advice": "定期審核 ADW 計算公式是否涵蓋所有法定「工資」元素（包含浮動佣金）。"},
-        "en": {"title": "Chapter 6: Paid Annual Leave", "statute": "Employees are entitled to 7-14 days of paid annual leave after 1 year of service. Leave pay must be calculated using the 12-month Average Daily Wage (ADW).", "red_flag": "Miscalculating ADW (excluding commission/allowances) or refusing statutory leave.", "board_advice": "Regularly audit the ADW calculation formula to ensure it encompasses all statutory 'wage' elements including variable commissions."}
-    },
-    "ch7": {
-        "keys": ["疾病津貼", "sickness allowance", "sick leave", "病假", "SL", "醫生紙", "medical certificate", "MC", "五分四", "4/5", "連續四日", "工傷"],
-        "zh": {"title": "第 7 章：疾病津貼", "statute": "連續病假不少於 4 天，並有合資格醫生證明書，可獲每日平均工資五分之四（4/5）的疾病津貼。", "red_flag": "在僱員放取有薪病假期間解僱僱員（除即時解僱外），屬違法行為。", "board_advice": "設立健全的醫療缺勤管理機制，嚴禁管理層對正合法放取病假的員工採取不利行動。"},
-        "en": {"title": "Chapter 7: Sickness Allowance", "statute": "Employees taking $\ge$ 4 consecutive days of sick leave with a valid medical certificate are entitled to sickness allowance at 4/5 of their ADW.", "red_flag": "Terminating an employee (other than summary dismissal) while they are on paid sick leave is an offence.", "board_advice": "Establish a robust medical absence management mechanism. Strictly prohibit adverse actions against employees on valid sick leave."}
-    },
-    "ch8": {
-        "keys": ["生育保障", "maternity protection", "maternity leave", "產假", "大肚", "pregnant", "pregnancy", "有咗", "產檢", "前4後6", "14星期"],
-        "zh": {"title": "第 8 章：生育保障", "statute": "合資格女性僱員可享有 14 星期有薪產假。僱主解僱已發出懷孕通知的僱員，即屬違法。", "red_flag": "解僱懷孕僱員（具極高刑事及平機會歧視索償風險）。", "board_advice": "推行母乳哺育友善及孕婦保護政策。將懷孕解僱的決策權收歸最高管理層/法務部。"},
-        "en": {"title": "Chapter 8: Maternity Protection", "statute": "Eligible female employees are entitled to 14 weeks of paid maternity leave. It is an offence to dismiss an employee who has served notice of pregnancy.", "red_flag": "Dismissing a pregnant employee (carries extreme criminal and EOC discrimination claim risks).", "board_advice": "Implement breastfeeding-friendly and maternity protection policies. Centralize any termination decisions regarding pregnant staff to Top Management/Legal."}
-    },
-    "ch9": {
-        "keys": ["侍產假", "paternity leave", "侍產", "男士侍產", "陪產假", "老婆生"],
-        "zh": {"title": "第 9 章：侍產假", "statute": "合資格男性僱員可享有 5 天男士侍產假，薪酬為每日平均工資的五分之四（4/5）。", "red_flag": "無理拒絕合資格的侍產假申請或未按 ADW 支付侍產假薪酬。", "board_advice": "推廣家庭友善政策（Family-friendly policies），增強員工歸屬感與 ESG 社會責任指標 (S)."},
-        "en": {"title": "Chapter 9: Paternity Leave", "statute": "Eligible male employees are entitled to 5 days of paternity leave at 4/5 of their ADW.", "red_flag": "Unreasonably refusing eligible paternity leave applications or failing to pay at the ADW rate.", "board_advice": "Promote family-friendly policies to enhance employee engagement and support ESG (Social) metrics."}
-    },
-    "ch10": {
-        "keys": ["年終酬金", "end of year payment", "雙糧", "double pay", "bonus", "第13個月", "13th month", "酌情花紅", "discretionary bonus", "花紅"],
-        "zh": {"title": "第 10 章：年終酬金", "statute": "合約訂明的年終酬金（如雙糧）受法例保障。不適用於純粹屬賞贈性質或由僱主酌情發放的獎賞（Discretionary Bonus）。", "red_flag": "將合約明訂的雙糧隨意更改為「酌情花紅」，並拒絕支付。", "board_advice": "在僱傭合約中，必須由法務審閱「酌情性（Discretionary）」與「保證性（Guaranteed）」獎金的法律字眼定義。"},
-        "en": {"title": "Chapter 10: End of Year Payment", "statute": "Contractual end of year payments (e.g., double pay) are protected. This does not apply to strictly discretionary bonuses.", "red_flag": "Arbitrarily treating contractual double pay as 'discretionary' and refusing payment.", "board_advice": "Ensure Legal review of all employment contracts to explicitly define the wording distinguishing 'Discretionary' vs 'Guaranteed' payments."}
-    },
     "ch11": {
-        "keys": ["終止僱傭合約", "termination", "解僱", "dismissal", "通知期", "notice period", "代通知金", "payment in lieu", "炒", "解雇", "辭職", "唔撈", "炒人", "fire", "resign", "quit", "補錢", "賠錢走", "遞信", "一個月通知"],
-        "zh": {"title": "第 11 章：終止僱傭合約", "statute": "終止合約需給予足夠通知期或代通知金。無試用期或試用期後，通知期不得少於 7 天。僱員嚴重犯錯可被即時解僱（Summary Dismissal）。", "red_flag": "未給予足夠代通知金，或濫用「即時解僱」權力而缺乏充分實證。", "board_advice": "落實漸進式紀律處分程序（Progressive Discipline）。即時解僱（Cap. 57 Sec 9）需視為最後手段，並留存無可辯駁的審計軌跡 (Audit Trail)。"},
-        "en": {"title": "Chapter 11: Termination of Employment Contract", "statute": "Termination requires appropriate notice period or payment in lieu. Post-probation notice must be at least 7 days. Summary dismissal is only for serious misconduct.", "red_flag": "Failing to provide sufficient payment in lieu, or abusing 'Summary Dismissal' without concrete evidence.", "board_advice": "Enforce Progressive Discipline procedures. Summary Dismissal (Cap. 57 Sec 9) must be the absolute last resort with an irrefutable audit trail."}
-    },
-    "ch12": {
-        "keys": ["僱傭保障", "employment protection", "不合理解僱", "unreasonable dismissal", "補償", "remedies", "無理解僱", "亂炒", "復職", "PIP", "表現差"],
-        "zh": {"title": "第 12 章：僱傭保障", "statute": "連續受僱滿 24 個月，如被僱主在缺乏正當理由（如能力、行為、冗員）下解僱，即屬不合理解僱，僱員可向勞資審裁處申索補救（如復職或終止僱傭金）。", "red_flag": "缺乏績效評估記錄（PIP）而以「表現欠佳」解僱滿2年的員工。", "board_advice": "優化績效改進計劃（PIP）流程。任何年資大於 2 年的解僱案，HR 總監需作獨立風險合規審核。"},
-        "en": {"title": "Chapter 12: Employment Protection", "statute": "Employees with $\ge$ 24 months of continuous service dismissed without a valid reason (e.g., conduct, capability, redundancy) can claim for unreasonable dismissal remedies.", "red_flag": "Dismissing an employee of >2 years for 'poor performance' without any Performance Improvement Plan (PIP) records.", "board_advice": "Optimize PIP workflows. Any termination of employees with >2 years of tenure requires an independent risk & compliance review by the HR Director."}
+        "keys": ["終止僱傭合約", "termination", "解僱", "dismissal", "通知期", "notice period", "代通知金", "payment in lieu", "炒", "解雇", "辭職", "唔撈", "炒人", "fire", "resign", "quit", "補錢", "賠錢走", "遞信", "一個月通知", "即炒", "即時解僱", "summary dismissal", "嚴重犯錯", "偷嘢", "打交", "犯法", "犯錯"],
+        "zh": {
+            "title": "第 11 章：終止僱傭合約",
+            "statute": "終止合約需給予足夠通知期或代通知金。無試用期或試用期後，通知期不得少於 7 天。僱員嚴重犯錯可被無通知期即時解僱（Summary Dismissal）。",
+            "red_flag": "未給予足夠代通知金，或濫用「即時解僱」權力而缺乏充分實證。",
+            "gov_advice": "【董事會管治】落實漸進式紀律處分程序（Progressive Discipline）。即時解僱（Cap. 57 Sec 9）需視為最後手段，並留存無可辯駁的審計軌跡 (Audit Trail)。\n\n【前線營運提示】若遇員工嚴重違紀（如偷竊、打架），請立即拍照留底並通報 HR/法務，切勿在情緒激動下口頭當場宣告即時解僱。"
+        },
+        "en": {
+            "title": "Chapter 11: Termination of Employment Contract",
+            "statute": "Termination requires appropriate notice period or payment in lieu. Post-probation notice must be at least 7 days. Summary dismissal is only for serious misconduct.",
+            "red_flag": "Failing to provide sufficient payment in lieu, or abusing 'Summary Dismissal' without concrete evidence.",
+            "gov_advice": "[Board-Level Governance] Enforce Progressive Discipline procedures. Summary Dismissal (Cap. 57 Sec 9) must be the absolute last resort with an irrefutable audit trail.\n\n[Line Manager Actions] Report serious misconduct to HR immediately. Take photos/collect evidence, and never verbally execute a summary dismissal in the heat of the moment."
+        }
     },
     "ch13": {
-        "keys": ["遣散費", "severance payment", "長期服務金", "long service payment", "LSP", "SP", "裁員", "redundancy", "執笠", "結業", "對沖", "offset", "MPF", "強積金", "cut人", "layoff"],
-        "zh": {"title": "第 13 章：遣散費及長期服務金", "statute": "受僱滿 24 個月因裁員遭解僱可獲遣散費（SP）；受僱滿 5 年非因嚴重過失遭解僱可獲長期服務金（LSP）。強積金（MPF）僱主供款部分可作對沖（直至2025年取消對沖機制生效前）。", "red_flag": "製造假裁員，或為逃避 LSP 而在員工年資接近 5 年時惡意解僱。", "board_advice": "建立戰略性人力資源規劃（SHRP）。精算並撥備遣散費/長服金負債，特別注意「取消對沖」過渡期的財務合規風險。"},
-        "en": {"title": "Chapter 13: Severance & Long Service Payment", "statute": "Severance Payment (SP) for redundancy after 24 months service; Long Service Payment (LSP) for non-summary dismissal after 5 years service. MPF employer contributions can currently offset these (until abolition takes effect).", "red_flag": "Sham redundancies or maliciously terminating staff approaching the 5-year mark to evade LSP.", "board_advice": "Adopt Strategic HR Planning (SHRP). Actuarially assess and provision for SP/LSP liabilities, paying critical attention to the financial compliance risks of the MPF offset abolition."}
+        "keys": ["遣散費", "severance payment", "長期服務金", "long service payment", "LSP", "SP", "裁員", "redundancy", "執笠", "結業", "對沖", "offset", "mpf", "強積金", "cut人", "layoff"],
+        "zh": {
+            "title": "第 13 章：遣散費及長期服務金",
+            "statute": "受僱滿 24 個月因裁員遭解僱可獲遣散費（SP）；受僱滿 5 年非因嚴重過失遭解僱可獲長期服務金（LSP）。強積金（MPF）對沖機制已正式取消。",
+            "red_flag": "製造假裁員，或為逃避 LSP 而在員工年資接近 5 年時惡意解僱。",
+            "gov_advice": "【董事會管治】建立戰略性人力資源規劃（SHRP）。精算並撥備遣散費/長服金負債，特別注意「取消對沖」過渡期的財務與法律合規風險。\n\n【前線營運提示】終止任何年資超過 2 年的員工合約前，必須先與總部 HR 核算潛在的 SP/LSP 負債，切勿私自安排裁員。"
+        },
+        "en": {
+            "title": "Chapter 13: Severance & Long Service Payment",
+            "statute": "Severance Payment (SP) for redundancy after 24 months service; Long Service Payment (LSP) for non-summary dismissal after 5 years service. MPF employer contributions offsetting mechanism is abolished.",
+            "red_flag": "Sham redundancies or maliciously terminating staff approaching the 5-year mark to evade LSP.",
+            "gov_advice": "[Board-Level Governance] Adopt Strategic HR Planning (SHRP). Actuarially assess and provision for SP/LSP liabilities, paying critical attention to the financial compliance risks of the MPF offset abolition.\n\n[Line Manager Actions] Always calculate potential SP/LSP liabilities with HQ HR before terminating any staff with over 2 years of tenure."
+        }
     }
 }
 
 CAP57_SECTIONS_DB = [
     {
-        "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|468|兼職|散工|part(-|\s)time',
-        "zh": {"title": "Cap. 57 Section 3: 連續性合約的涵義與舉證責任", "statute": "凡受僱於同一僱主連續 4 星期或以上，4 星期總工時滿 68 小時（468機制），即屬連續性合約。爭議時，舉證責任（Onus of proof）在於僱主。", "red_flag": "僱主無法出示完整工時紀錄以證明僱員非連續性受僱。", "board_advice": "實施數字化工時追蹤與動態警示機制，確保兼職工時數據具備完備的稽核軌跡，以符合最新舉證責任要求。"},
-        "en": {"title": "Cap. 57 Section 3: Meaning of continuous contract and onus of proof", "statute": "Employment for $\ge$ 4 weeks with a total of $\ge$ 68 hours (468 mechanism). In disputes, the onus of proof rests on the employer to prove it is NOT a continuous contract.", "red_flag": "Failure of the employer to produce comprehensive working hour records to discharge the onus of proof.", "board_advice": "Implement digital time-tracking with dynamic alerts to ensure a complete audit trail for part-time working hours."}
-    },
-    {
-        "regex": r'(section|sec\.?|第)?\s*9\s*(條)?|即時解僱|summary dismissal|即炒|唔聽話|嚴重犯錯|偷嘢|打交|犯法|犯錯',
-        "zh": {"title": "Cap. 57 Section 9: 僱主不給予通知而終止合約的情況 (即時解僱)", "statute": "僱主只可在僱員：(a) 故意不服從合法合理命令；(b) 行為不當；(c) 犯有欺詐/不忠實行為；(d) 慣常疏忽職責時，才可無通知期即時解僱。", "red_flag": "缺乏書面警告信及調查報告下，濫用第 9 條權利。", "board_advice": "將第 9 條解僱定為「極端風險行動」，必須由 HR 總監及法務共同簽發 (Sign-off)。"},
-        "en": {"title": "Cap. 57 Section 9: Termination by employer without notice (Summary Dismissal)", "statute": "Employers can only summarily dismiss for: (a) willful disobedience of lawful/reasonable orders; (b) misconduct; (c) fraud/dishonesty; (d) habitual neglect of duties.", "red_flag": "Abusing Section 9 without written warnings and a thorough investigation report.", "board_advice": "Classify Section 9 dismissals as 'Extreme Risk Actions' requiring joint sign-off by HR Director and Legal."}
-    },
-    {
-        "regex": r'(section|sec\.?|第)?\s*31[B-Y]\s*(條)?|遣散費|severance|31I|裁員|執笠|layoff',
-        "zh": {"title": "Cap. 57 Part VB (Sec 31B-31Y): 遣散費", "statute": "詳列遣散費之計算、裁員的法律定義、以及發生權益轉移（Transfer of Business）時連續性僱傭的計算方式。", "red_flag": "企業併購或業務轉讓時，未妥善處理員工年資過渡，引發集體訴訟。", "board_advice": "併購前（M&A）必須進行徹底的 HR 盡職調查（Due Diligence），精算潛在的 Sec 31 遣散責任。"},
-        "en": {"title": "Cap. 57 Part VB (Sec 31B-31Y): Severance Payment", "statute": "Details SP calculation, the legal definition of redundancy, and continuity of employment during a Transfer of Business.", "red_flag": "Failing to handle tenure transition during M&A/Transfer of Business, triggering class actions.", "board_advice": "Conduct thorough HR Due Diligence pre-M&A to actuarially assess potential Section 31 liabilities."}
-    },
-    {
-        "regex": r'(section|sec\.?|第)?\s*32[A-V]\s*(條)?|不合理解僱|unreasonable dismissal|亂炒|大肚被炒|工傷被炒',
-        "zh": {"title": "Cap. 57 Part VIA (Sec 32A-32V): 僱傭保障", "statute": "涵蓋不合理解僱、不合理及不合法解僱（如懷孕、工傷期間解僱）的補償機制，包括復職令或最高15萬元的補償金。", "red_flag": "觸犯不合法解僱，需面臨刑事檢控及勞資審裁處的高額補償金裁決。", "board_advice": "強化高管法律培訓。部署合規監控，防止經理級人員隨意終止合約。"},
-        "en": {"title": "Cap. 57 Part VIA (Sec 32A-32V): Employment Protection", "statute": "Covers remedies for unreasonable, and unreasonable & unlawful dismissals (e.g., during pregnancy/work injury), including reinstatement or compensation up to $150k.", "red_flag": "Committing unlawful dismissal leading to criminal prosecution and severe Labour Tribunal awards.", "board_advice": "Enhance executive legal training. Deploy compliance monitors to prevent line managers from arbitrary terminations."}
+        "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|468',
+        "zh": {"title": "Cap. 57 Section 3: 連續性合約的涵義與舉證責任", "statute": "凡受僱於同一僱主連續 4 星期或以上，4 星期總工時滿 68 小時（468機制），即屬連續性合約。爭議時，舉證責任（Onus of proof）在於僱主。", "red_flag": "僱主無法出示完整工時紀錄以證明僱員非連續性受僱。", "gov_advice": "【董事會管治】實施數字化工時追蹤與動態警示機制，確保兼職工時數據具備完備的稽核軌跡，以符合最新舉證責任要求。\n\n【前線營運提示】確保更表（Roster）與員工實際打卡紀錄完全吻合，所有考勤紀錄必須在系統妥善保存最少 6 個月。"},
+        "en": {"title": "Cap. 57 Section 3: Meaning of continuous contract and onus of proof", "statute": "Employment for $\ge$ 4 weeks with a total of $\ge$ 68 hours (468 mechanism). In disputes, the onus of proof rests on the employer to prove it is NOT a continuous contract.", "red_flag": "Failure of the employer to produce comprehensive working hour records to discharge the onus of proof.", "gov_advice": "[Board-Level Governance] Implement digital time-tracking with dynamic alerts to ensure a complete audit trail for part-time working hours.\n\n[Line Manager Actions] Ensure rosters strictly match actual clock-in/out records. Attendance records must be securely stored for at least 6 months."}
     }
 ]
 
 # ==========================================
-# 3. Sidebar UI (Architect Profile & Settings)
+# 3. Sidebar UI (Cleaned & Streamlined)
 # ==========================================
 with st.sidebar:
     st.header("🌐 UI Language / 介面語言")
-    lang_choice = st.radio("Select Language / 選擇語言", ['繁體中文', 'English'], index=0 if st.session_state.lang == '繁體中文' else 1)
+    lang_choice = st.radio("Select Language / 選擇語言", ['繁體中文', 'English'], index=0 if st.session_state.lang == '繁體中文' else 1, label_visibility="collapsed")
     if lang_choice != st.session_state.lang:
         st.session_state.lang = lang_choice
         st.rerun()
     
     st.markdown("---")
     
-    # 🌟 新增：持份者視角切換 (Stakeholder Role Mapping)
-    st.header("👥 持份者視角 / Stakeholder Role")
-    role_options = ['HR Director / 法務與人力資源總監', 'Line Manager / 前線部門主管']
-    role_choice = st.selectbox("Select Role / 選擇角色視角", role_options, index=role_options.index(st.session_state.role))
-    if role_choice != st.session_state.role:
-        st.session_state.role = role_choice
-        st.rerun()
-    
-    st.markdown("---")
-    is_zh = st.session_state.lang == '繁體中文'
-    is_hr_director = 'HR Director' in st.session_state.role
-    
     if is_zh:
         st.markdown("### ⚙️ 系統設計與安全防護")
         st.markdown("""
-        * **研發定位**: 專為企業管理層設計的自動化勞工法例檢索與合規稽核工具。
+        * **研發定位**: 專為企業管理層與前線主管設計的自動化勞工法例檢索與合規稽核工具。
         * **治理框架**: 系統架構嚴格對齊 **IAPP AIGP** 部署監督規範與 **ISO/IEC 42001** 管理體系思維。
         * **架構安全性**: **100% 無 AI / 無 RAG 技術**。採用純決定性代碼架構，杜絕生成式大模型胡言亂語的「AI 幻覺」風險。
         * **數據零留底**: 系統無後台數據庫，不儲存任何查詢歷史。網頁一經關閉，所有輸入數據立即在雲端**全部歸零**，確保企業人事隱私絕對安全。
         * **法規對齊**: 深度整合官方《僱傭條例》（Cap. 57）主體條文與最新 **「468機制」**。
         """)
-        # 顯示角色的額外提示
-        if is_hr_director:
-            st.success("🛡️ **當前視角 (HR Director)**: 系統將著重顯示戰略性風險預測、董事會合規建議與政策修訂指引。")
-        else:
-            st.info("🎯 **當前視角 (Line Manager)**: 系統將著重顯示前線排班違規紅線、即時紀律處分邊界與上報(Escalation)提示。")
     else:
         st.markdown("### ⚙️ System Design & Security")
         st.markdown("""
-        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives.
+        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives and managers.
         * **Governance**: Architecture strictly aligned with **IAPP AIGP** deployment oversight and **ISO/IEC 42001** management systems.
         * **Core Technology**: **100% AI-Free / No RAG**. Built entirely on deterministic logic to fully eliminate the risk of generative "AI hallucinations."
         * **Data Sovereignty**: Zero back-end databases. No query histories are recorded. All user inputs are **completely wiped from memory** upon closing the page.
         * **Statutory Alignment**: Fully integrated with the official text of the HK Employment Ordinance (Cap. 57) and the latest **468 mechanism**.
         """)
-        if is_hr_director:
-            st.success("🛡️ **Current Role (HR Director)**: Focus is on strategic risk forecasting, board-level compliance, and policy revision.")
-        else:
-            st.info("🎯 **Current Role (Line Manager)**: Focus is on rostering red flags, immediate disciplinary boundaries, and escalation protocols.")
         
     st.markdown("---")
-    # 📢 內建 Microsoft Forms 的「治理級」回饋機制按鈕
-    st.info("### 📢 用戶體驗與持續治理回饋 / User Feedback")
+    st.info("### 📢 持續治理回饋 / User Feedback")
     st.link_button(
         "📝 填寫意見回饋表單 (Feedback Form)" if is_zh else "📝 Submit Feedback & Suggestions", 
         "https://forms.office.com/r/Uzu5pN7QpL",
@@ -218,72 +160,34 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
 
+# ==========================================
+# 4. Helper Functions & Guardrails
+# ==========================================
+OUT_OF_SCOPE_WORDS = ["稅", "tax", "強積金投資", "mpf investment", "基金", "簽證", "visa", "入境處", "移民", "immigration", "刑事", "criminal", "報稅"]
 
-# ==========================================
-# 4. Helper Functions for Logic (加入硬性邊界控制)
-# ==========================================
-def check_out_of_scope(query, lang):
-    """
-    🌟 新增：硬性邊界控制 (Out-of-Scope Blocking)
-    """
-    out_of_scope_keywords = ["報稅", "tax", "稅務", "簽證", "visa", "移民", "immigration", "強積金投資", "mpf investment", "刑事", "criminal law", "離婚", "divorce"]
+def check_out_of_scope(query):
     query_lower = query.lower()
-    
-    if any(keyword in query_lower for keyword in out_of_scope_keywords):
-        if lang == '繁體中文':
-            return """
-            ⚠️ **超出審查範圍 (Out of Scope)**
-            
-            您提及的問題（如稅務、入境簽證、強積金投資策略或一般刑事法）超出了《僱傭條例》（Cap. 57）的涵蓋範圍。本系統為堅守「100% 決定性合規」原則，**拒絕提供範圍外的推測性建議**以防範合規幻覺。請直接向稅務局、入境處或強積金管理局查詢。
-            """
-        else:
-            return """
-            ⚠️ **Out of Scope**
-            
-            The issue you mentioned (e.g., tax, visas, MPF investments, or general criminal law) is outside the scope of the Hong Kong Employment Ordinance (Cap. 57). To maintain 100% compliance accuracy, **this system strictly refuses to generate speculative advice beyond its statutory framework**. Please consult the IRD, ImmD, or MPFA directly.
-            """
-    return None
+    return any(word in query_lower for word in OUT_OF_SCOPE_WORDS)
 
 def search_knowledge_base(query):
     query_lower = query.lower()
     results = []
-    
-    # Check Layer 2: Cap 57 Sections (Priority)
     for sec in CAP57_SECTIONS_DB:
         if re.search(sec["regex"], query_lower):
             results.append({"type": "cap57", "data": sec})
-            
-    # Check Layer 1: 13 Chapters
     for ch_id, ch_data in CHAPTERS_DB.items():
         if any(key in query_lower for key in ch_data["keys"]):
             results.append({"type": "chapter", "data": ch_data, "id": ch_id})
-            
     return results
 
 def fallback_response(lang):
     if lang == '繁體中文':
-        return """
-        🔍 **兜底與動態導航機制啟動 (Fallback Mechanism Triggered)** 您查詢的內容涉及《僱傭條例》（Cap. 57）較為高階或細緻的法定條文，超出了常規簡明指南的範疇。
-        
-        ⚖️ **法務與調解視角提示：**
-        處理冷門或複雜的勞資爭議時，切勿依賴二手資訊。為確保 100% 的法律合規性與精準度，請避免依賴 AI 生成之解讀，直接查閱原文。同時，請注意防範相關的勞資關係破裂與潛在的法庭索償風險。
-        
-        👉 **請點擊下方鏈結直接查閱電子版香港法例的官方即時條文：**
-        [🔗 電子版香港法例 Cap. 57 (官方原文)](https://www.elegislation.gov.hk/hk/cap57)
-        """
+        return "🔍 **兜底與動態導航機制啟動 (Fallback Mechanism Triggered)** 您查詢的內容涉及較為高階或冷門的法定條文。為確保 100% 法律合規性，請查閱官方原文：[🔗 電子版香港法例 Cap. 57 (官方原文)](https://www.elegislation.gov.hk/hk/cap57)"
     else:
-        return """
-        🔍 **Fallback & Dynamic Navigation Triggered** Your query involves advanced or highly specific provisions of the Employment Ordinance (Cap. 57) that fall outside the standard concise guidelines.
-        
-        ⚖️ **Legal & Mediation Perspective:**
-        When dealing with complex or uncommon labor disputes, never rely on secondary information. To ensure 100% legal compliance and accuracy, avoid relying solely on AI interpretations. Please refer to the statutory text. Simultaneously, guard against the breakdown of labor relations and potential tribunal litigation risks.
-        
-        👉 **Please click the link below to access the official, up-to-date statutory text:**
-        [🔗 eLegislation Cap. 57 (Official Full Text)](https://www.elegislation.gov.hk/hk/cap57)
-        """
+        return "🔍 **Fallback & Dynamic Navigation Triggered** Your query involves advanced or specific provisions. To ensure 100% legal compliance, please refer to the official statutory text: [🔗 eLegislation Cap. 57 (Official Full Text)](https://www.elegislation.gov.hk/hk/cap57)"
 
 # ==========================================
-# 5. Main UI Layout (Three-Track)
+# 5. Main UI Layout
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Full-Text Interactive Advisor")
 if is_zh:
@@ -291,50 +195,39 @@ if is_zh:
 else:
     st.subheader("100% Deterministic Compliance · Zero-Hallucination Employment Law Advisor")
 
-# ------------ 💡 免責聲明 💡 ------------
 st.warning("""
 ⚖️ **重要告示 & 免責聲明 / Important Notice & Disclaimer**
-
-* **繁體中文**: 本系統為自動化合規查詢與輔助工具，內容僅供參考，並不構成任何正式法律意見。由於法令條文可能隨時間修訂，且個案情境各有不同，本系統無法保證所有資訊之即時性與完全適用性。如有重要決策或爭議，請務必諮詢香港特別行政區政府勞工處或專業法律顧問。
-* **English**: This system is an automated compliance tool for general reference purposes only and does not constitute formal legal advice. As statutory provisions may evolve and individual case circumstances vary, the absolute real-time currency or applicability of the information cannot be guaranteed. For crucial decisions or disputes, please formally consult the Labour Department of the HKSAR Government or seek professional legal counsel.
+* **繁體中文**: 本系統為自動化合規查詢與輔助工具，內容僅供參考，並不構成任何正式法律意見。如有重要決策或爭議，請務必諮詢香港特別行政區政府勞工處或專業法律顧問。
+* **English**: This system is an automated compliance tool for general reference purposes only and does not constitute formal legal advice. For crucial decisions or disputes, please formally consult the Labour Department of the HKSAR Government or seek professional legal counsel.
 """)
-# ----------------------------------------
 
 tab_chat, tab_audit, tab_calc = st.tabs([
-    "💬 Chatbot (情境導航 / Scenario Advisor)", 
-    "📋 Executive Audit (動態合規審計)", 
+    "💬 情境導航 (Scenario Advisor)", 
+    "📋 動態合規評分卡 (Dynamic Audit)", 
     "🧮 ADW 713 計算機 (Salary Calculator)"
 ])
 
 # ------------------------------------------
-# Track A: Chatbot Interface (中英雙語對照版)
+# Track A: Chatbot Interface (中英雙語對照 + 雙重指引合併)
 # ------------------------------------------
 with tab_chat:
-    # Display chat messages
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Chat input
-    if prompt := st.chat_input("Enter keywords, concepts, or Cap.57 Sections (e.g., '468', 'Section 9', 'layoff')..." if not is_zh else "請輸入關鍵字、口語或 Cap.57 條文（例如：'468', '即炒', '出糧', '大肚', '對沖'）..."):
-        # Add user message to state
+    if prompt := st.chat_input("請輸入關鍵字、口語或 Cap.57 條文（例如：'468', '即炒', '出糧'）..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Process matching
         with st.chat_message("assistant"):
-            # 1. 檢查硬性邊界 (Out of Scope Blocking)
-            oos_response = check_out_of_scope(prompt, st.session_state.lang)
-            
-            if oos_response:
-                st.markdown(oos_response)
-                st.session_state.messages.append({"role": "assistant", "content": oos_response})
+            if check_out_of_scope(prompt):
+                out_msg = "🛑 **超出範圍阻斷 (Out of Scope)**: 您查詢的內容包含非《僱傭條例》(Cap. 57) 範圍的議題（如：稅務、簽證、基金投資等）。本系統拒絕提供推測性解答。請向稅務局或入境處查詢。" if is_zh else "🛑 **Out of Scope Blocked**: Your query relates to topics outside Cap. 57 (e.g., taxation, visas). This system refuses to generate speculative answers."
+                st.error(out_msg)
+                st.session_state.messages.append({"role": "assistant", "content": out_msg})
             else:
                 matches = search_knowledge_base(prompt)
-                
                 if not matches:
-                    # 雙語對照式 Fallback 輸出
                     response = fallback_response('繁體中文') + "\n\n" + fallback_response('English')
                     st.markdown(response)
                     st.session_state.messages.append({"role": "assistant", "content": response})
@@ -344,191 +237,66 @@ with tab_chat:
                         data_zh = match["data"]["zh"]
                         data_en = match["data"]["en"]
                         
-                        st.info(
-                            f"**📖 {data_zh['title']} / {data_en['title']}**\n\n"
-                            f"**Statutory Core / 法定核心:**\n{data_zh['statute']}\n\n"
-                            f"**English statutory text:**\n{data_en['statute']}"
-                        )
-                        st.error(
-                            f"**🚨 Red Flags / 違法紅線:**\n{data_zh['red_flag']}\n\n"
-                            f"**English risk notice:**\n{data_en['red_flag']}"
-                        )
-                        
-                        # 🎭 根據角色動態調整 Governance 顯示文字的開頭標籤
-                        gov_label_zh = "🛡️ Board-Level Governance / 高管與董事會治理建議:" if 'HR Director' in st.session_state.role else "🎯 Operational Execution / 前線營運與通報要求:"
-                        gov_label_en = "**English governance advice:**" if 'HR Director' in st.session_state.role else "**English operational requirement:**"
-                        
-                        st.warning(
-                            f"**{gov_label_zh}**\n{data_zh['board_advice']}\n\n"
-                            f"{gov_label_en}\n{data_en['board_advice']}"
-                        )
+                        st.info(f"**📖 {data_zh['title']} / {data_en['title']}**\n\n**Statutory Core / 法定核心:**\n{data_zh['statute']}\n\n**English Statutory Text:**\n{data_en['statute']}")
+                        st.error(f"**🚨 Red Flags / 違法紅線:**\n{data_zh['red_flag']}\n\n**Risk Notice:**\n{data_en['red_flag']}")
+                        st.warning(f"**🛡️ 治理與營運雙重指引 / Governance & Operational Actions:**\n\n{data_zh['gov_advice']}\n\n{data_en['gov_advice']}")
                         st.markdown(f"[🔗 Verify on eLegislation / 官方查證連結](https://www.elegislation.gov.hk/hk/cap57)")
                         st.markdown("---")
                         
-                        # 儲存到對話歷史紀錄
-                        combined_response += f"**{data_zh['title']} / {data_en['title']}**\n\n*Statute:* {data_zh['statute']}\n\n*English:* {data_en['statute']}\n\n---\n"
-                    
+                        combined_response += f"**{data_zh['title']} / {data_en['title']}**\n\n"
                     st.session_state.messages.append({"role": "assistant", "content": combined_response})
 
 # ------------------------------------------
-# Track B: Executive Audit Checklists (動態合規審計表單)
+# Track B: Dynamic Risk Audit Scorecard
 # ------------------------------------------
 with tab_audit:
-    if is_zh:
-        st.markdown("### 📊 企業級動態合規自我審查 (Dynamic Pre-Deployment Audit)")
-        st.caption("基於 AIGP 部署監督理念：結合營運場景進行風險前置判斷，確保企業 HR 政策完全符合 Cap. 57。")
-    else:
-        st.markdown("### 📊 Enterprise-Grade Dynamic Compliance Audit")
-        st.caption("Aligned with AIGP Deployment Oversight: Context-aware risk profiling ensuring full Cap. 57 compliance.")
-
-    lang_key = "zh" if is_zh else "en"
+    st.markdown("### 📋 動態風險排查表單 (Dynamic Risk Audit)" if is_zh else "### 📋 Dynamic Risk Audit Scorecard")
     
-    # 🌟 新增：動態審計前置脈絡 (Context Input)
-    with st.form("audit_context_form"):
-        st.markdown("#### 📥 " + ("第一步：輸入審計場景脈絡 (Input Audit Context)" if is_zh else "Step 1: Input Audit Context"))
+    with st.form("audit_form"):
         col1, col2 = st.columns(2)
         with col1:
-            emp_type = st.selectbox(
-                "僱員合約類型 (Employment Type)" if is_zh else "Employment Type",
-                ["全職/連續性合約 (Continuous Contract / 468)", "兼職/散工 (Casual / <468)", "獨立承包人 (Independent Contractor)"]
-            )
+            emp_type = st.selectbox("員工合約類型 (Employment Type)", ["全職 (Full-time)", "兼職/散工 (Part-time/Casual)", "獨立承包人 (Independent Contractor)"])
         with col2:
-            emp_tenure = st.selectbox(
-                "服務年資 (Tenure)" if is_zh else "Tenure",
-                ["未滿 3 個月 (< 3 months)", "滿 24 個月 (>= 24 months)", "滿 5 年 (>= 5 years)"]
-            )
-        submit_audit = st.form_submit_button("執行合規診斷 🔍 (Execute Audit)" if is_zh else "Execute Audit 🔍")
+            tenure = st.selectbox("服務年資 (Tenure)", ["少於 4 星期", "大於 4 星期", "滿 24 個月", "滿 5 年"])
+        submit_audit = st.form_submit_button("執行風險稽核 (Execute Audit)" if is_zh else "Execute Audit")
 
-    # 🌟 動態彈出對應的重大合規警告 (Dynamic Warning Logic)
     if submit_audit:
-        st.markdown("---")
-        st.markdown("#### 🚨 " + ("第二步：動態合規風險報告 (Dynamic Risk Report)" if is_zh else "Step 2: Dynamic Risk Report"))
-        
-        has_critical_risk = False
-        
+        st.markdown("#### 🚨 稽核結果 (Audit Findings)")
+        has_risk = False
         if emp_type == "獨立承包人 (Independent Contractor)":
-            has_critical_risk = True
-            st.error("🔴 **假自僱風險 (False Self-Employment Risk)**: 若對該員工具備實質控制權（Control test），法庭仍會將其視為僱員，企業將面臨逃避強積金及法定福利之刑事檢控。（參照第 1 章）" if is_zh else "🔴 **False Self-Employment Risk**: If substantial control exists, courts will deem them employees. Severe criminal risk for evading MPF and statutory benefits. (Ref Chapter 1)")
-            
-        if emp_tenure == "滿 24 個月 (>= 24 months)" and emp_type != "獨立承包人 (Independent Contractor)":
-            has_critical_risk = True
-            st.warning("⚠️ **不合理解僱風險 (Unreasonable Dismissal Risk)**: 該員工受僱滿 24 個月，任何解僱行動必須具備正當理由（能力、行為、冗員等），否則面臨勞審處索償。（參照第 12 章）" if is_zh else "⚠️ **Unreasonable Dismissal Risk**: With >= 24 months tenure, any termination must have a valid statutory reason (conduct, capability, redundancy) to avoid Labour Tribunal claims. (Ref Chapter 12)")
-            
-        if emp_tenure == "滿 5 年 (>= 5 years)" and emp_type != "獨立承包人 (Independent Contractor)":
-            has_critical_risk = True
-            st.error("🔴 **長期服務金負債 (LSP Liability Risk)**: 該員工年資達 5 年，非因嚴重過失解僱時，企業必須撥備並支付長期服務金 (LSP)。（參照第 13 章）" if is_zh else "🔴 **Long Service Payment (LSP) Liability**: With >= 5 years tenure, termination (other than summary dismissal) triggers statutory LSP payout requirements. (Ref Chapter 13)")
-            
-        if not has_critical_risk:
-            st.success("✅ 目前設定未觸發特高風險紅線，請繼續完成下方常規審計清單。" if is_zh else "✅ No critical high-risk triggers detected in context. Proceed with the standard audit checklist below.")
-
-    st.markdown("---")
-    st.markdown("#### 📋 " + ("第三步：常規章節合規自查清單 (Standard Chapter Checklist)" if is_zh else "Step 3: Standard Chapter Checklist"))
-
-    # Audit logic: Calculate compliance rate
-    total_checks = 0
-    passed_checks = 0
-
-    # Create an accordion/expander for each of the 13 Chapters mapped in our DB
-    for ch_id, ch_data in CHAPTERS_DB.items():
-        data = ch_data[lang_key]
-        with st.expander(f"✅ {data['title']}"):
-            col1, col2 = st.columns([3, 1])
-            
-            with col1:
-                st.markdown(f"**📝 Statutory Requirement:** {data['statute']}")
-                st.markdown(f"**🚨 Risk Flag:** {data['red_flag']}")
-                st.markdown(f"**🛡️ Governance:** {data['board_advice']}")
-                st.markdown("[🔗 Cap. 57 Link](https://www.elegislation.gov.hk/hk/cap57)")
-            
-            with col2:
-                st.markdown("**Compliance Checklist:**")
-                c1 = st.checkbox(f"Policy Updated ({ch_id})", key=f"{ch_id}_c1")
-                c2 = st.checkbox(f"Staff Notified ({ch_id})", key=f"{ch_id}_c2")
-                c3 = st.checkbox(f"System Enforced ({ch_id})", key=f"{ch_id}_c3")
-                
-                total_checks += 3
-                passed_checks += sum([c1, c2, c3])
-                
-                score = (sum([c1, c2, c3]) / 3) * 100
-                st.metric("Chapter Score", f"{score:.0f}%")
-
-    # Overall Compliance Score
-    st.markdown("---")
-    overall_score = (passed_checks / total_checks) * 100 if total_checks > 0 else 0
-    st.subheader(f"📈 {'整體合規率 / Overall Compliance Rate'}: {overall_score:.1f}%")
-    st.progress(overall_score / 100)
-    
-    if overall_score < 100:
-        st.error("⚠️ Actions Required: Unchecked items present potential legal and operational risks." if not is_zh else "⚠️ 需採取行動：未勾選項目存在潛在的法律及營運風險，請盡速由主管介入處理。")
-    else:
-        st.success("✅ Fully Compliant based on internal audit parameters." if not is_zh else "✅ 內部審計顯示為完全合規狀態。")
+            st.error("**假自僱風險 (False Self-Employment Risk):** 確保與該人員的合作實質上不構成僱傭關係，否則企業將面臨逃避強積金及法定福利之刑事檢控風險。")
+            has_risk = True
+        if emp_type == "兼職/散工 (Part-time/Casual)" and tenure != "少於 4 星期":
+            st.warning("**468 連續性合約風險 (468 Mechanism):** 該兼職員工極可能已突破滾動 68 小時門檻。請確保系統已自動為其結算有薪法定假日與疾病津貼。")
+            has_risk = True
+        if tenure == "滿 24 個月" or tenure == "滿 5 年":
+            st.error("**解僱賠償與保障負債 (Termination Liabilities):** 年資滿 24 個月解僱具有「不合理解僱」申索風險及遣散費責任；滿 5 年則具備長期服務金(LSP)風險。請收歸總部 HR 處理。")
+            has_risk = True
+        if not has_risk:
+            st.success("✅ 根據當前參數，未觸發高危紅線。請繼續遵守一般工資支付（工資期後7天內出糧）之基本規定。" if is_zh else "✅ No high-risk statutory triggers detected based on current parameters.")
 
 # ------------------------------------------
 # Track C: ADW 713 Calculator
 # ------------------------------------------
 with tab_calc:
-    if is_zh:
-        st.markdown("### 🧮 12個月平均工資 (ADW) 法定權益計算機")
-        st.info("根據《2007年僱傭(修訂)條例》，法定權益（如假日薪酬、年假薪酬、疾病津貼、產假及侍產假等）須以12個月的平均工資來計算。在計算平均工資時，須剔除「不予計算在內」的期間（如未獲付全薪的假期）及該期間的工資。")
+    st.markdown("### 🧮 12個月平均工資 (ADW 713) 法定權益計算機" if is_zh else "### 🧮 12-Month ADW Calculator")
+    st.info("計算平均工資時，須剔除「不予計算在內」的期間（如未獲付全薪的工傷假、無薪假）及該期間的工資。" if is_zh else "Exclude 'disregarded periods' (e.g., unpaid leave, 4/5 sick leave) and corresponding wages to avoid deflating the average.")
+    
+    col_in1, col_in2 = st.columns(2)
+    with col_in1:
+        total_wages = st.number_input("1. 過去12個月總工資 / Total Wages ($)", min_value=0.0, value=150000.0, step=1000.0)
+        total_days = st.number_input("2. 總日數 / Total Days (e.g., 365)", min_value=1, value=365, step=1)
+    with col_in2:
+        disregarded_days = st.number_input("3. 須剔除日數 / Disregarded Days", min_value=0, value=5, step=1)
+        disregarded_wages = st.number_input("4. 剔除期間工資 / Disregarded Wages ($)", min_value=0.0, value=2667.0, step=100.0)
+
+    st.markdown("---")
+    if total_days > disregarded_days:
+        adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
+        st.metric("每日平均工資 (ADW)", f"${adw:.2f}")
         
-        col_in1, col_in2 = st.columns(2)
-        with col_in1:
-            total_wages = st.number_input("1. 過去 12 個月內賺取的總工資 ($)", min_value=0.0, value=150000.0, step=1000.0)
-            total_days = st.number_input("2. 該 12 個月內的總日數 (通常為 365 或 366 日)", min_value=1, value=365, step=1)
-        with col_in2:
-            disregarded_days = st.number_input("3. 須剔除的「不予計算在內」日數 (例如: 無薪假、獲付五分四工資的病假)", min_value=0, value=0, step=1)
-            disregarded_wages = st.number_input("4. 在上述剔除期間內所獲支付的工資 ($)", min_value=0.0, value=0.0, step=100.0)
-
-        st.markdown("---")
-        if total_days > disregarded_days:
-            adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
-            st.metric("每日平均工資 (Average Daily Wage, ADW)", f"${adw:.2f}")
-            
-            st.markdown("#### ⚖️ 法定權益每日補償參考：")
-            col_res1, col_res2 = st.columns(2)
-            col_res1.success(f"**疾病津貼 / 產假 / 侍產假 (五分之四):**\n### ${adw * 0.8:.2f} / 日")
-            col_res2.success(f"**假日薪酬 / 年假薪酬 / 代通知金 (全薪):**\n### ${adw:.2f} / 日")
-        else:
-            st.error("⚠️ 錯誤：剔除日數不可大於或等於總日數。")
-
-        st.markdown("---")
-        st.markdown("#### 🔗 勞工處官方網站計算機連結 (Official Calculators)")
-        st.markdown("""
-        為確保最高級別之合規防禦，遇到複雜計糧個案時，建議主管與 HR 直接點擊以下官方連結進行覆核：
-        * [勞工處：法定權益參考計算機 (Statutory Employment Entitlements Reference Calculator)](https://www.labour.gov.hk/tc/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
-        * [勞工處：法定最低工資參考計算機 (Statutory Minimum Wage Reference Calculator)](https://www.labour.gov.hk/tc/erb/smw_cal/smw_cal.html)
-        * [勞工處：平均每月工資參考計算機 (Average Monthly Salary Reference Calculator)](https://www.labour.gov.hk/tc/labour/avgMonthSalaryCalculator.htm)
-        """)
-
+        c_res1, c_res2 = st.columns(2)
+        c_res1.success(f"**疾病/產假/侍產假 (4/5ths):**\n### ${adw * 0.8:.2f} / 日")
+        c_res2.success(f"**年假/法定假日/代通知金 (Full Pay):**\n### ${adw:.2f} / 日")
     else:
-        st.markdown("### 🧮 12-Month Average Daily Wage (ADW) Calculator")
-        st.info("Under the Employment (Amendment) Ordinance 2007, statutory entitlements must be calculated on the basis of the 12-month average wages. Periods and wages that fall under the 'disregarding provisions' shall be excluded.")
-        
-        col_in1, col_in2 = st.columns(2)
-        with col_in1:
-            total_wages = st.number_input("1. Total wages earned in the past 12 months ($)", min_value=0.0, value=150000.0, step=1000.0)
-            total_days = st.number_input("2. Total number of days in the 12-month period (e.g., 365)", min_value=1, value=365, step=1)
-        with col_in2:
-            disregarded_days = st.number_input("3. Number of days to be disregarded (e.g., unpaid leave)", min_value=0, value=0, step=1)
-            disregarded_wages = st.number_input("4. Wages paid for the disregarded periods ($)", min_value=0.0, value=0.0, step=100.0)
-
-        st.markdown("---")
-        if total_days > disregarded_days:
-            adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
-            st.metric("Average Daily Wage (ADW)", f"${adw:.2f}")
-            
-            st.markdown("#### ⚖️ Statutory Entitlements Reference:")
-            col_res1, col_res2 = st.columns(2)
-            col_res1.success(f"**Sickness Allowance / Maternity / Paternity (4/5ths):**\n### ${adw * 0.8:.2f} / day")
-            col_res2.success(f"**Holiday / Annual Leave / Payment in lieu of Notice (Full Pay):**\n### ${adw:.2f} / day")
-        else:
-            st.error("⚠️ Error: Disregarded days cannot be equal to or greater than total days.")
-
-        st.markdown("---")
-        st.markdown("#### 🔗 Official Labour Department Calculators")
-        st.markdown("""
-        For ultimate compliance assurance in complex payroll scenarios, HR professionals are advised to cross-verify using the official tools:
-        * [Statutory Employment Entitlements Reference Calculator](https://www.labour.gov.hk/tc/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
-        * [Statutory Minimum Wage Reference Calculator](https://www.labour.gov.hk/tc/erb/smw_cal/smw_cal.html)
-        * [Average Monthly Salary Reference Calculator](https://www.labour.gov.hk/tc/labour/avgMonthSalaryCalculator.htm)
-        """)
+        st.error("⚠️ 錯誤：剔除日數不可大於或等於總日數。 (Error: Disregarded days ≥ Total days)")
