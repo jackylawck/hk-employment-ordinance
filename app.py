@@ -2,7 +2,7 @@ import streamlit as st
 import re
 
 # ==========================================
-# 1. Page Configuration & UI Initialization
+# 1. 頁面配置與 UI 初始化 (Page Config)
 # ==========================================
 st.set_page_config(
     page_title="Hong Kong Employment Ordinance (Cap. 57) Advisor",
@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Hide Streamlit default menu for enterprise look
+# 隱藏預設選單，提升企業級產品視覺 (Hide default menu)
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -21,7 +21,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State
+# 初始化 Session State (Initialize State)
 if 'lang' not in st.session_state:
     st.session_state.lang = '繁體中文'
 if 'messages' not in st.session_state:
@@ -30,11 +30,11 @@ if 'messages' not in st.session_state:
 is_zh = st.session_state.lang == '繁體中文'
 
 # ==========================================
-# 2. Dual-Layer Knowledge Base (Cap. 57 & 13 Chapters)
+# 2. 雙層法規資料庫 (Dual-Layer Knowledge Base)
 # ==========================================
 CHAPTERS_DB = {
     "ch1": {
-        "keys": ["適用範圍", "application", "scope", "418", "468", "連續性合約", "continuous contract", "兼職", "part-time", "part time", "散工", "casual worker", "自僱", "self-employed", "假自僱", "番工", "返工"],
+        "keys": ["適用範圍", "application", "scope", "418", "468", "連續性合約", "兼職", "part-time", "散工", "自僱", "假自僱", "返工"],
         "zh": {
             "title": "第 1 章：僱傭條例適用範圍",
             "statute": "《僱傭條例》適用於所有受僱於僱傭合約的僱員。連續性合約已放寬為「468」機制：指僱員連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上，即享有更多法定權益（如休息日、有薪年假、疾病津貼等）。",
@@ -119,7 +119,7 @@ CAP57_SECTIONS_DB = [
 ]
 
 # ==========================================
-# 3. Sidebar UI (Cleaned & Streamlined)
+# 3. 側邊欄與治理免責聲明 (Sidebar UI)
 # ==========================================
 with st.sidebar:
     st.header("🌐 UI Language / 介面語言")
@@ -161,7 +161,7 @@ with st.sidebar:
     st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
 
 # ==========================================
-# 4. Helper Functions & Guardrails
+# 4. 輔助函式與安全護欄 (Helpers & Guardrails)
 # ==========================================
 OUT_OF_SCOPE_WORDS = ["稅", "tax", "強積金投資", "mpf investment", "基金", "簽證", "visa", "入境處", "移民", "immigration", "刑事", "criminal", "報稅"]
 
@@ -187,11 +187,11 @@ def fallback_response(lang):
         return "🔍 **Fallback & Dynamic Navigation Triggered** Your query involves advanced or specific provisions. To ensure 100% legal compliance, please refer to the official statutory text: [🔗 eLegislation Cap. 57 (Official Full Text)](https://www.elegislation.gov.hk/hk/cap57)"
 
 # ==========================================
-# 5. Main UI Layout
+# 5. 主畫面佈局
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Full-Text Interactive Advisor")
 if is_zh:
-    st.subheader("100% 決定性合規・零幻覺勞工法例檢索與審計系統")
+    st.subheader("100% 決定性合規・零幻覺勞工法例檢責與審計系統")
 else:
     st.subheader("100% Deterministic Compliance · Zero-Hallucination Employment Law Advisor")
 
@@ -208,7 +208,7 @@ tab_chat, tab_audit, tab_calc = st.tabs([
 ])
 
 # ------------------------------------------
-# Track A: Chatbot Interface (中英雙語對照 + 雙重指引合併)
+# Track A: Chatbot Interface
 # ------------------------------------------
 with tab_chat:
     for msg in st.session_state.messages:
@@ -276,27 +276,75 @@ with tab_audit:
             st.success("✅ 根據當前參數，未觸發高危紅線。請繼續遵守一般工資支付（工資期後7天內出糧）之基本規定。" if is_zh else "✅ No high-risk statutory triggers detected based on current parameters.")
 
 # ------------------------------------------
-# Track C: ADW 713 Calculator
+# Track C: ADW 713 Calculator (內建大白話原理解釋 ＋ 官方出處)
 # ------------------------------------------
 with tab_calc:
     st.markdown("### 🧮 12個月平均工資 (ADW 713) 法定權益計算機" if is_zh else "### 🧮 12-Month ADW Calculator")
-    st.info("計算平均工資時，須剔除「不予計算在內」的期間（如未獲付全薪的工傷假、無薪假）及該期間的工資。" if is_zh else "Exclude 'disregarded periods' (e.g., unpaid leave, 4/5 sick leave) and corresponding wages to avoid deflating the average.")
     
     col_in1, col_in2 = st.columns(2)
     with col_in1:
-        total_wages = st.number_input("1. 過去12個月總工資 / Total Wages ($)", min_value=0.0, value=150000.0, step=1000.0)
-        total_days = st.number_input("2. 總日數 / Total Days (e.g., 365)", min_value=1, value=365, step=1)
+        total_wages = st.number_input("1. 過去12個月賺取的總工資 / Total Wages ($)", min_value=0.0, value=150000.0, step=1000.0)
+        total_days = st.number_input("2. 12個月內的總日數 / Total Days (e.g., 365)", min_value=1, value=365, step=1)
     with col_in2:
-        disregarded_days = st.number_input("3. 須剔除日數 / Disregarded Days", min_value=0, value=5, step=1)
-        disregarded_wages = st.number_input("4. 剔除期間工資 / Disregarded Wages ($)", min_value=0.0, value=2667.0, step=100.0)
+        disregarded_days = st.number_input("3. 須剔除日數 / Disregarded Days (非全薪假天數)", min_value=0, value=5, step=1)
+        disregarded_wages = st.number_input("4. 剔除期間工資 / Disregarded Wages (非全薪假期間拿到的薪酬) ($)", min_value=0.0, value=2667.0, step=100.0)
 
     st.markdown("---")
+    
+    # 執行運算
     if total_days > disregarded_days:
-        adw = (total_wages - disregarded_wages) / (total_days - disregarded_days)
+        adjusted_numerator = total_wages - disregarded_wages
+        adjusted_denominator = total_days - disregarded_days
+        adw = adjusted_numerator / adjusted_denominator
+        
         st.metric("每日平均工資 (ADW)", f"${adw:.2f}")
         
         c_res1, c_res2 = st.columns(2)
-        c_res1.success(f"**疾病/產假/侍產假 (4/5ths):**\n### ${adw * 0.8:.2f} / 日")
-        c_res2.success(f"**年假/法定假日/代通知金 (Full Pay):**\n### ${adw:.2f} / 日")
+        c_res1.success(f"**疾病津貼 / 產假 / 侍產假薪酬 (4/5ths):**\n### ${adw * 0.8:.2f} / 日")
+        c_res2.success(f"**有薪年假 / 法定假日 / 代通知金 (Full Pay):**\n### ${adw:.2f} / 日")
+        
+        # 💡 升級點：大白話動態原理講解區塊 (Bilingual Explanations)
+        st.markdown("---")
+        st.subheader("💡 713 條例：分子與分母扣除原理說明" if is_zh else "💡 Paragraph 713: Numerator & Denominator Deduction Logic")
+        
+        if is_zh:
+            st.markdown(f"""
+            根據《2007年僱傭(修訂)條例》（俗稱 713 條例），為了**避免拉低員工的平均工資**進而損害其法定權益，系統已執行以下決定性扣除邏輯：
+            
+            1. **分子（合資格薪酬）**：從總工資 **${total_wages:,.2f}** 中，無情扣除了非全薪假期發放的薪酬 **${disregarded_wages:,.2f}**，得出合資格分子為 **${adjusted_numerator:,.2f}**。
+            2. **分母（合資格天數）**：從總天數 **{total_days} 天** 中，精準剔除了非全薪假期的 **{disregarded_days} 天**，得出合資格分母為 **{adjusted_denominator} 天**。
+            3. **最終算式**：$$\\text{{ADW}} = \\frac{{\\${adjusted_numerator:,.2f}（合資格薪酬）}}{{{adjusted_denominator}天（合資格天數）}} = \\${adw:.2f}$$
+            
+            *註：若員工請的是「100%全薪年假」或「有薪休息日」，因為沒有拉低工資平均值，依法**不需剔除**，直接保留在分子和分母中計算。*
+            """)
+        else:
+            st.markdown(f"""
+            According to the Employment (Amendment) Ordinance 2007 (commonly known as Paragraph 713), to **avoid deflating the employee's average daily wage** and reducing statutory benefits, the system executes the following deterministic logic:
+            
+            1. **Numerator (Adjusted Wages)**: Disregarded wages of **${disregarded_wages:,.2f}** (earned during less-than-full-pay leave) are deducted from Total Wages **${total_wages:,.2f}**, resulting in an eligible numerator of **${adjusted_numerator:,.2f}**.
+            2. **Denominator (Adjusted Days)**: Disregarded leave periods of **{disregarded_days} days** are excluded from Total Days **{total_days} days**, resulting in an eligible denominator of **{adjusted_denominator} days**.
+            3. **Formula**: $$\\text{{ADW}} = \\frac{{\\${adjusted_numerator:,.2f} (Adjusted Wages)}}{{{adjusted_denominator} days (Adjusted Days)}} = \\${adw:.2f}$$
+            
+            *Note: Full-paid leaves (e.g., 100% full-paid annual leave or paid rest days) do NOT deflate the average, and thus legally **should NOT be excluded** from either the numerator or denominator.*
+            """)
+            
     else:
         st.error("⚠️ 錯誤：剔除日數不可大於或等於總日數。 (Error: Disregarded days ≥ Total days)")
+
+    # 💡 升級點：提供直連勞工處官方文件的 PDF 出處網址 (Statutory Source Citations)
+    st.markdown("---")
+    st.markdown("#### 🔗 勞工處官方權益計算指引與出處文檔 (Official Statutory Sources)")
+    if is_zh:
+        st.markdown("""
+        為落實最高規格之法律防禦，如遇複雜個案，請直接下載並翻查勞工處發布之官方成文法簡明指南手冊：
+        * [勞工處官方文檔：附錄一《以12個月平均工資來計算有關法定權益簡介及計算例子》PDF 說明書](https://www.labour.gov.hk/tc/public/pdf/ConciseGuide/Appendix1.pdf)
+        * [勞工處官方文檔：《僱傭條例簡明指南》全本繁體中文 PDF 下載網址](https://www.labour.gov.hk/tc/public/pdf/ConciseGuide/EmploymentOrdinance.pdf)
+        * [勞工處官方動態核算工具：法定權益參考計算機首頁網址](https://www.labour.gov.hk/tc/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
+        """)
+    else:
+        st.markdown("""
+        To achieve maximum legal compliance and discharge accountability, please access the official source documentation issued by the HK Labour Department:
+        * [Official Source: Appendix 1 - Guide to the Calculation of Statutory Entitlements on the Basis of 12-Month Average Wages (PDF Handbook)](https://www.labour.gov.hk/eng/public/pdf/ConciseGuide/Appendix1.pdf)
+        * [Official Source: Concise Guide to the Employment Ordinance (Full English PDF)](https://www.labour.gov.hk/eng/public/pdf/ConciseGuide/EmploymentOrdinance.pdf)
+        * [Official Web Application: Statutory Employment Entitlements Reference Calculator Portal](https://www.labour.gov.hk/eng/labour/Statutory_Employment_Entitlements_Reference_Calculator.htm)
+        """)
