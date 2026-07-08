@@ -180,7 +180,6 @@ CAP57_SECTIONS_DB = [
 # ==========================================
 # 4. 輔助函式與「高危法務路徑」硬阻斷護欄 (Guardrails & Legal Diagnostics)
 # ==========================================
-# 💡 已精準隔離出界關鍵字，防止與勞工法中的刑事/補償概念碰撞
 OUT_OF_SCOPE_WORDS = ["稅務局", "公司報稅", "離境簽證", "護照移民", "強積金基金投資", "mpf investment", "入境處簽證", "visa application"]
 
 def check_out_of_scope(query):
@@ -194,7 +193,7 @@ def diagnose_high_risk_breach(query):
     # 軌道一：孕期解僱硬阻斷
     # ------------------------------------------
     pregnancy_signals = ["懷孕", "大肚", "pregnant", "有咗", "產檢", "醫生證明"]
-    termination_signals = ["解僱", "炒", "離職", "代通知金", "裁員", "辭退", "fire", "terminate", "dismiss", "炒人"]
+    termination_signals = ["解僱", "炒", "離職", "代通知金", "裁員", "辭退", "fire", "terminate", "dismiss", "炒人", "即炒", "即時解僱"]
     if any(p in query_lower for p in pregnancy_signals) and any(t in query_lower for t in termination_signals):
         if not any(ex in query_lower for ex in ["偷", "打架", "犯法", "欺詐", "steal", "打交"]):
             if st.session_state.lang == '繁體中文':
@@ -234,37 +233,78 @@ def diagnose_high_risk_breach(query):
     # ------------------------------------------
     variation_signals = ["降職", "減薪", "變更合約", "合約修訂", "減人工", "逼簽", "不簽就", "主動辭職", "轉兼職"]
     if any(v in query_lower for v in variation_signals):
+        if not any(ex in query_lower for ex in ["偷", "打架", "犯法", "欺詐", "steal", "打交"]):
+            if st.session_state.lang == '繁體中文':
+                return """
+                ❌ **【最高級別合規危機：變相減薪逼退方案完全違法，絕對不可行！】** 🛑
+                
+                ⚖️ **法律定性與核心漏洞 (Constructive Dismissal & Variation)：**
+                * **不簽新約當主動辭職在法律上完全無效：** 在香港《僱傭條例》(Cap. 57) 第 VIA 章（僱傭保障）及普通法法理下，僱主單方面大幅變更核心條件（如強制減薪 30% 並強行轉為不符合 468 的兼職），即使僱員拒絕簽署，原有全職合約依然合法生效。
+                * **構成「推定解僱 (Constructive Dismissal)」：** 企業若強行按新條件執行（扣減薪酬或拒絕其全職上班），在法律上直接被定性為**「僱主的違約行為構成了實質解僱」**。員工有權直接以無事先通知形式終止合約，並反向視為被公司「不合理及不合法解僱」。
+                
+                🚨 **董事會與企業面臨的嚴重法律風險：**
+                1. **非法扣薪之刑事責任：** 若強行扣減工資，將直接觸犯《僱傭條例》第 3 章的非法扣薪及拖欠工資罪行，一經定罪，公司及董事會高管最高可被罰款 **HK$350,000 及監禁 3 年**。
+                2. **巨額解僱索償負債：** 員工透過「推定解僱」索償，公司必須被迫在 7 天內全數支付：全職薪酬基進的解僱代通知金、累積年假折算折現，以及可能累積的**長期服務金 (Long Service Payment)**。高管層試圖以逼退來逃避遣散/長服金的算計將完全落空。
+                3. **勞審處嚴厲制裁：** 員工可向勞資審裁處申請「不合理及不合法解僱」之 remedies（救濟），公司除了面臨高昂的終止僱傭金外，還可能被判處最高 **HK$150,000** 的額外補償金。
+                
+                🛡️ **法律與管治專家緊急替代方案 (Pivot Actions)：**
+                * 董事會必須**立即撤回**「限期簽署、不簽當辭職」的合約修訂通知書，硬性中止此違規逼退 SOP。
+                * **落實人在環中（Human-in-the-loop）雙向協商：** 企業應透過正規的效能改善計劃（PIP）建立合法的客觀評估紀錄。任何合約修訂或轉型兼職，**必須在勞資雙方完全自願且親筆書面簽署同意（Mutual Written Consent）的前提下**方可執行。
+                """
+            else:
+                return """
+                ❌ **【CRITICAL BREACH: UNILATERAL DEMOTION & PAY CUT ABSOLUTELY INFEASIBLE!】** 🛑
+                
+                ⚖️ **Legal Rationale: Constructive Dismissal Triggered**
+                * **Illegal Coercion:** Issuing a 'sign-or-terminate' notification for a pay cut and forced part-time switch is legally void. Under Part VIA of Cap. 57 and Common Law, unilateral substantial variation of core employment terms constitutes **"Constructive Dismissal"**.
+                * **Criminal Deductions:** Implementing the pay cut without explicit voluntary written consent breaches Chapter 3 of the EO, risking criminal prosecution, fines up to **HK$350,000, and 3 years imprisonment** for liable directors.
+                
+                🛡️ **Urgent Governance Pivot:**
+                * **Immediately withdraw** the coercive amendment notice. Any transition to part-time roles or salary restructuring must be achieved strictly via genuine, voluntary **Mutual Written Consent**.
+                """
+
+    # ------------------------------------------
+    # 軌道四：強制索取 TU/性罪行紀錄與即炒硬阻斷（跨條例 Cap. 57 × Cap. 486 審計）
+    # ------------------------------------------
+    privacy_leak_signals = ["信貸報告", "tu報告", "tu 報告", "環聯", "性罪行", "性罪行紀錄", "個人資料", "私隱"]
+    disobedience_signals = ["不服從", "合理命令", "合法命令", "合理命令", "即炒", "即時解僱", "第9條", "第九條"]
+    
+    if any(pl in query_lower for pl in privacy_leak_signals) and any(ds in query_lower for ds in disobedience_signals):
         if st.session_state.lang == '繁體中文':
             return """
-            ❌ **【最高級別合規危機：變相減薪逼退方案完全違法，絕對不可行！】** 🛑
+            ❌ **【最高級別合規危機：強制索取私隱報告並「即炒」方案完全違法，絕對不可行！】** 🛑
             
-            ⚖️ **法律定性與核心漏洞 (Constructive Dismissal & Variation)：**
-            * **不簽新約當主動辭職在法律上完全無效：** 在香港《僱傭條例》(Cap. 57) 第 VIA 章（僱傭保障）及普通法法理下，僱主單方面大幅變更核心條件（如強制減薪 30% 並強行轉為不符合 468 的兼職），即使僱員拒絕簽署，原有全職合約依然合法生效。
-            * **構成「推定解僱 (Constructive Dismissal)」：** 企業若強行按新條件執行（扣減薪酬或拒絕其全職上班），在法律上直接被定性為**「僱主的違約行為構成了實質解僱」**。員工有權直接以無事先通知形式終止合約，並反向視為被公司「不合理及不合法解僱」。
+            ⚖️ **跨條例死穴拆解 (Cap. 57 × Cap. 486 雙重違規)：**
+            * **核心漏洞一：嚴重違反《個人資料（私隱）條例》（Cap. 486）：** 根據保障資料第 1 原則（收集個人資料的目的及方式），資料收集必須與僱主職能有直接關係且不能超乎適度。
+              1. **「性罪行紀錄查核」：** 香港警方規定目前**僅限於「準僱員」（求職者）**，且工作必須直接涉及兒童或精神受挫者。強制要求「現職」普通金融銷售員提供，屬於違法過度收集。
+              2. **「信貸報告 (TU)」：** 除非員工職位涉及高階核心財務控制（如財務總監），否則對現職常規銷售員進行強制性大範圍 TU 審查，完全超出了私隱公署的「適度原則」。
+            * **核心漏洞二：無法觸發《僱傭條例》(Cap. 57) 第 9 條：** 由於公司的這項強制命令本身在《私隱條例》下即屬違法，因此該命令在法律上**並不構成一項「合法且合理的命令 (Lawful and Reasonable Order)」**。員工拒絕提供是保障自身法定權益，公司絕無權據此進行無補償即時解僱。
             
-            🚨 **董事會與企業面臨的嚴重法律風險：**
-            1. **非法扣薪之刑事責任：** 若強行扣減工資，將直接觸犯《僱傭條例》第 3 章的非法扣薪及拖欠工資罪行，一經定罪，公司及董事會高管最高可被罰款 **HK$350,000 及監禁 3 年**。
-            2. **巨額解僱索償負債：** 員工透過「推定解僱」索償，公司必須被迫在 7 天內全數支付：全職薪酬基進的解僱代通知金、累積年假折算折現，以及可能累積的**長期服務金 (Long Service Payment)**。高管層試圖以逼退來逃避遣散/長服金的算計將完全落空。
-            3. **勞審處嚴厲制裁：** 員工可向勞資審裁處申請「不合理及不合法解僱」之 remedies（救濟），公司除了面臨高昂的終止僱傭金外，還可能被判處最高 **HK$150,000** 的額外補償金。
+            🚨 **董事會與企業面臨的嚴重後果：**
+            1. **不合理解僱之民事巨額索償：** 若以此「即炒」員工，公司在勞資審裁處必輸無疑，將面臨不合理解僱（代通知金、年資福利補償）及最高 **HK$150,000** 的終止僱傭慰問金裁決。
+            2. **私隱專員公署（PCPD）刑事處分：** 受影響員工可集體向私隱專員公署投訴。一經查實，公署會對公司發出「執行通知（Enforcement Notice）」。企業若違反公署發出的執行通知，**即屬刑事罪行，一經定罪，最高可被罰款港幣 5 萬元及監禁 2 年**。
             
             🛡️ **法律與管治專家緊急替代方案 (Pivot Actions)：**
-            * 董事會必須**立即撤回**「限期簽署、不簽當辭職」的合約修訂通知書，硬性中止此違規逼退 SOP。
-            * **落實人在環中（Human-in-the-loop）雙向協商：** 企業應透過正規的效能改善計劃（PIP）建立合法的客觀評估紀錄。任何合約修訂或轉型兼職，**必須在勞資雙方完全自願且親筆書面簽署同意（Mutual Written Consent）的前提下**方可執行。
+            * 董事會必須**立即取消並撤回**「強制要求現職全員提供 TU 與性罪行紀錄」的誠信治理命令，硬性終止此違規 SOP。
+            * **修正合規基準：** 將此類背景審查嚴格限縮在「入職前（Onboarding Stage）」的特定高風險候選人。對於現職員工，應改用合規的內部利益衝突申報、日常雙簽審計（Dual-control Auditing）等對私隱侵害性較低的內控手段來滿足金融誠信治理要求。
             """
         else:
             return """
-            ❌ **【CRITICAL BREACH: UNILATERAL DEMOTION & PAY CUT ABSOLUTELY INFEASIBLE!】** 🛑
+            ❌ **【CRITICAL BREACH: COERCIVE PRIVACY COLLECTION & SUMMARY DISMISSAL ILLEGAL!】** 🛑
             
-            ⚖️ **Legal Rationale: Constructive Dismissal Triggered**
-            * **Illegal Coercion:** Issuing a 'sign-or-terminate' notification for a pay cut and forced part-time switch is legally void. Under Part VIA of Cap. 57 and Common Law, unilateral substantial variation of core employment terms constitutes **"Constructive Dismissal"**.
-            * **Criminal Deductions:** Implementing the pay cut without explicit voluntary written consent breaches Chapter 3 of the EO, risking criminal prosecution, fines up to **HK$350,000, and 3 years imprisonment** for liable directors.
+            ⚖️ **Cross-Statutory Failure Analysis (Cap. 57 × Cap. 486):**
+            * **Breach of PDPO (Cap. 486):** Under Data Protection Principle 1 (DPP1), data collection must be necessary and not excessive. 
+              1. The **Sexual Conviction Record Check (SCRC)** is strict legally restricted by the HK Police to **prospective employees (job applicants)** whose work involves children. Forcing "existing" financial sales staff to provide it is an excessive privacy infringement.
+              2. Forcing existing general staff to submit **Credit Reports (TU)** violates the proportionality principle unless they handle high-level treasury functions.
+            * **Invalidation of Section 9 (Cap. 57):** Because the corporate order itself violates the PDPO, it **does NOT constitute a "Lawful and Reasonable Order"**. Employee non-compliance cannot be used as grounds for summary dismissal.
             
-            🛡️ **Urgent Governance Pivot:**
-            * **Immediately withdraw** the coercive amendment notice. Any transition to part-time roles or salary restructuring must be achieved strictly via genuine, voluntary **Mutual Written Consent**.
+            🚨 **Sanctions & Liabilities:**
+            * **Criminal Prosecution under PDPO:** Failure to comply with an Enforcement Notice issued by the Privacy Commissioner (PCPD) is a criminal offence, carrying a fine of **HK$50,000 and 2 years imprisonment** for liable executives.
+            * **Unreasonable Dismissal Claims:** The company will face severe Labour Tribunal awards for wrongful summary dismissal.
             """
 
     # ------------------------------------------
-    # 軌道四：最新「468機制」四週工時動態數字審計
+    # 軌道五：最新「468機制」四週工時動態數字審計
     # ------------------------------------------
     weeks_patterns = [
         r'(?:第一|1)(?:週|周|星(?:期|期天)|week)\s*(\d+)\s*(?:小時|h|hrs)?',
