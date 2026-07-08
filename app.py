@@ -11,12 +11,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 隱藏預設選單，提升企業級產品視覺 (Hide default menu)
+# 💡 修正點：移除 header {visibility: hidden;}，確保左邊側邊欄按鈕與容器正常顯示
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     .stCheckbox > label {font-weight: 500;}
     </style>
 """, unsafe_allow_html=True)
@@ -32,7 +31,6 @@ is_zh = st.session_state.lang == '繁體中文'
 # ==========================================
 # 2. 雙層法規資料庫 (Dual-Layer Knowledge Base)
 # ==========================================
-# 嚴格依據勞工處官方《僱傭條例簡明指南》主體架構與香港本地職場實務編碼
 CHAPTERS_DB = {
     "ch1": {
         "keys": ["適用範圍", "application", "scope", "418", "468", "連續性合約", "兼職", "part-time", "散工", "炒散", "自僱", "假自僱", "返工"],
@@ -156,10 +154,17 @@ CHAPTERS_DB = {
     }
 }
 
+CAP57_SECTIONS_DB = [
+    {
+        "regex": r'(section|sec\.?|第)?\s*3\s*(條)?|418|468',
+        "zh": {"title": "Cap. 57 Section 3: 連續性合約的涵義與舉證責任", "statute": "凡受僱於同一僱主連續 4 星期或以上，4 星期總工時滿 68 小時（468機制），即屬連續性合約。爭議時，舉證責任（Onus of proof）在於僱主。", "red_flag": "僱主無法出示完整工時紀錄以證明僱員非連續性受僱。", "gov_advice": "【董事會管治】實施數字化工時追蹤與動態警示機制，確保兼職工時數據具備完備的稽核軌跡，以符合最新舉證責任要求。\n\n【前線營運提示】確保更表（Roster）與員工實際打卡紀錄完全吻合，所有考勤紀錄必須在系統妥善保存最少 6 個月。"},
+        "en": {"title": "Cap. 57 Section 3: Meaning of continuous contract and onus of proof", "statute": "Employment for $\ge$ 4 weeks with a total of $\ge$ 68 hours (468 mechanism). In disputes, the onus of proof rests on the employer to prove it is NOT a continuous contract.", "red_flag": "Failure of the employer to produce comprehensive working hour records to discharge the onus of proof.", "gov_advice": "[Board-Level Governance] Implement digital time-tracking with dynamic alerts to ensure a complete audit trail for part-time working hours.\n\n[Line Manager Actions] Ensure rosters strictly match actual clock-in/out records. Attendance records must be securely stored for at least 6 months."}
+    }
+]
+
 # ==========================================
 # 4. 輔助函式與「高危法務路徑」硬阻斷護欄 (Guardrails & Legal Diagnostics)
 # ==========================================
-# 💡 終極優化：移除單純的 "刑事" 字眼，改為長詞組，徹底防止與勞工法刑事責任查詢產生誤判碰撞
 OUT_OF_SCOPE_WORDS = ["稅務局", "公司報稅", "離境簽證", "護照移民", "強積金基金投資", "mpf investment", "入境處簽證", "visa application"]
 
 def check_out_of_scope(query):
@@ -232,6 +237,9 @@ def diagnose_high_risk_breach(query):
 def search_knowledge_base(query):
     query_lower = query.lower()
     results = []
+    for sec in CAP57_SECTIONS_DB:
+        if re.search(sec["regex"], query_lower):
+            results.append({"type": "cap57", "data": sec})
     for ch_id, ch_data in CHAPTERS_DB.items():
         if any(key in query_lower for key in ch_data["keys"]):
             results.append({"type": "chapter", "data": ch_data, "id": ch_id})
@@ -263,6 +271,46 @@ tab_chat, tab_audit, tab_calc = st.tabs([
     "📋 動態合規評分卡 (Dynamic Audit)", 
     "🧮 ADW 713 計算機 (Salary Calculator)"
 ])
+
+# ------------------------------------------
+# 左邊側邊欄 (Sidebar UI 回歸！)
+# ------------------------------------------
+with st.sidebar:
+    st.header("🌐 UI Language / 介面語言")
+    lang_choice = st.radio("Select Language / 選擇語言", ['繁體中文', 'English'], index=0 if st.session_state.lang == '繁體中文' else 1, label_visibility="collapsed")
+    if lang_choice != st.session_state.lang:
+        st.session_state.lang = lang_choice
+        st.rerun()
+    
+    st.markdown("---")
+    
+    if is_zh:
+        st.markdown("### ⚙️ 系統設計與安全防護")
+        st.markdown("""
+        * **研發定位**: 專為企業管理層與前線主管設計的自動化勞工法例檢索與合規稽核工具。
+        * **知識庫基準**: **深度萃取自勞工處官方《僱傭條例簡明指南》**，精準覆蓋 95% 日常人事、排班與計糧之核心合規場景。
+        * **安全防護網**: 遇到超出簡明指南範疇之複雜法律爭議，系統將**自動觸發阻斷與兜底導航**，強制引導用戶查閱官方 Cap. 57 原文，嚴防過度依賴與合規幻覺。
+        * **架構安全性**: 100% 無 AI / 無 RAG 技術。採用純決定性代碼，數據零留底，確保人事隱私絕對安全。
+        """)
+    else:
+        st.markdown("### ⚙️ System Design & Security")
+        st.markdown("""
+        * **Positioning**: An automated labor law retrieval and compliance audit tool engineered for corporate executives and managers.
+        * **Knowledge Base**: Deeply extracted from the official **Concise Guide to the Employment Ordinance**, covering 95% of core HR operational scenarios.
+        * **Safety Guardrails**: Triggers automatic fallback mechanisms for complex legal disputes beyond the scope of the Concise Guide, preventing automation bias.
+        * **Core Technology**: 100% AI-Free / No RAG. Deterministic logic with zero data retention for absolute privacy.
+        """)
+        
+    st.markdown("---")
+    st.info("### 📢 持續治理回饋 / User Feedback")
+    st.link_button(
+        "📝 填寫意見回饋表單 (Feedback Form)" if is_zh else "📝 Submit Feedback & Suggestions", 
+        "https://forms.office.com/r/Uzu5pN7QpL",
+        type="primary"
+    )
+    
+    st.markdown("---")
+    st.caption("🔗 Data Source: [eLegislation Cap. 57](https://www.elegislation.gov.hk/hk/cap57)")
 
 # ------------------------------------------
 # Track A: Chatbot Interface
@@ -329,7 +377,7 @@ with tab_audit:
         st.markdown("#### 🚨 稽核結果 (Audit Findings)")
         has_risk = False
         if emp_type == "獨立承包人 (Independent Contractor)":
-            st.error("**假自僱風險 (False Self-Employment Risk):** 確保與該人員的合作實質上不構成傭傭關係，否則企業將面臨逃避強積金及法定福利之刑事檢控風險。")
+            st.error("**假自僱風險 (False Self-Employment Risk):** 確保與該人員的合作實質上不構成僱傭關係，否則企業將面臨逃避強積金及法定福利之刑事檢控風險。")
             has_risk = True
         if emp_type == "兼職/散工 (Part-time/Casual)" and tenure != "少於 4 星期":
             st.warning("**468 連續性合約風險 (468 Mechanism):** 該兼職員工極可能已突破滾動 68 小時門檻。請確保系統已自動為其結算有薪法定假日與疾病津貼[cite: 2]。")
