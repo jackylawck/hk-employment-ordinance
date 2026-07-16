@@ -1,0 +1,30 @@
+name: ⚖️ Cap. 57 JSON Database Integrity Test
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  validate-json:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout Repository Code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: 🔍 Execute JSON Syntax Validation
+      run: |
+        python -c "
+        import json, sys
+        try:
+            with open('cap57_db.json', 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            print('✅ Success: cap57_db.json syntax is perfectly valid!')
+        except Exception as e:
+            print(f'❌ ERROR: {str(e)}', file=sys.stderr)
+            sys.exit(1)
+        "
