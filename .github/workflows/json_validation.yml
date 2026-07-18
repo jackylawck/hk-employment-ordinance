@@ -16,15 +16,27 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: 🔍 Execute JSON Syntax Validation
+    - name: 🔍 Execute JSON Schema & Syntax Validation
       run: |
         python -c "
         import json, sys
         try:
             with open('cap57_db.json', 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            print('✅ Success: cap57_db.json syntax is perfectly valid!')
+            print('✅ Success: Syntax is valid!')
+            
+            # AIGP 開發治理：強制稽核欄位完整性，防範 Functional Drift
+            required_keys = ['keys', 'zh', 'en']
+            sub_keys = ['title', 'statute', 'red_flag', 'gov_advice']
+            
+            for ch_id, ch_content in data.items():
+                for r_key in required_keys:
+                    assert r_key in ch_content, f'Missing base key: {r_key} in {ch_id}'
+                for s_key in sub_keys:
+                    assert s_key in ch_content['zh'], f'Missing zh value: {s_key} in {ch_id}'
+                    assert s_key in ch_content['en'], f'Missing en value: {s_key} in {ch_id}'
+            print('✅ Success: All strict statutory schema checks passed!')
         except Exception as e:
-            print(f'❌ ERROR: {str(e)}', file=sys.stderr)
+            print(f'❌ CRITICAL COMPLIANCE ERROR: {str(e)}', file=sys.stderr)
             sys.exit(1)
         "
