@@ -8,7 +8,6 @@ from datetime import datetime
 
 # ==========================================
 # 0. 企業級後台審計日誌初始化 (Backend Audit Logging)
-# AIGP Domain IV: 確保所有合規建議具備不可否認性 (Non-repudiation)
 # ==========================================
 logging.basicConfig(
     filename='compliance_audit.log', 
@@ -44,7 +43,6 @@ is_zh = st.session_state.lang == '繁體中文'
 
 # ==========================================
 # 2. 知識庫徹底解耦與強制同步層 (Forced Data Sync Layer)
-# 100% 鎖定勞工處官方答覆全文本，消滅任何人為濃縮盲區
 # ==========================================
 DB_FILE_PATH = 'cap57_db.json'
 
@@ -57,7 +55,7 @@ def init_and_load_knowledge_base():
             ],
             "zh": {
                 "title": "第一章：《僱傭條例》適用範圍與「468」連續性合約",
-                "statute": "【勞工處官方完整問答】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員和兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
+                "statute": "【勞工處官方完整問答】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員 and 兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
                 "red_flag": "錯誤包裝「獨立承包人（假自僱）」，或刻意打斷工時以規避 468 門檻。",
                 "gov_advice": "【董事會管治】人事考勤系統必須硬編碼此四大豁除群組，排班系統設定防呆機制，防範「468」違規。\n【前線營運提示】請確實記錄上下班時間，切勿口頭要求員工「提早下班」惡意避開 468 門檻。"
             },
@@ -123,7 +121,7 @@ def init_and_load_knowledge_base():
 CHAPTERS_DB = init_and_load_knowledge_base()
 
 # ==========================================
-# 3. 升級版意圖規則引擎 (Advanced Rule Engine with Negation Logic)
+# 3. 升級版意圖規則引擎 (Advanced Rule Engine)
 # ==========================================
 class ComplianceRuleEngine:
     def __init__(self, lang):
@@ -186,15 +184,8 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Audit Trail ID: {audit_hash} | Timestamp: {timestamp} (Log secured to backend)</div>"
 
 # ==========================================
-# 5. 主畫面佈局與側邊欄
+# 5. 主畫面佈局
 # ==========================================
-with st.sidebar:
-    st.header("🌐 UI Language / 介面語言")
-    lang_choice = st.radio("Select Language", ['繁體中文', 'English'], index=0 if is_zh else 1, label_visibility="collapsed")
-    if lang_choice != st.session_state.lang:
-        st.session_state.lang = lang_choice
-        st.rerun()
-
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("ISO 42001 認證架構・具備多字詞分數路由與高透明度審計")
 
@@ -212,7 +203,7 @@ with tab_chat:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"], unsafe_allow_html=True)
 
-    if prompt := st.chat_input("請輸入合規情境（例如：'如僱主或僱員想終止僱傭合約，須要給予對方多長的通知期或多少代通知金？'）..."):
+    if prompt := st.chat_input("請輸入合規情境..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -220,7 +211,6 @@ with tab_chat:
         with st.chat_message("assistant"):
             final_response = ""
             
-            # 正向語意清洗：移除常見提問前綴，鎖定核心名詞進行比對
             cleaned_prompt = re.sub(r'^(甚麼是|什麼是|請問|我想問|點樣先算係|如何|點樣)', '', prompt.strip())
             
             breach_warning = rule_engine.evaluate(prompt)
@@ -228,7 +218,6 @@ with tab_chat:
                 st.error(breach_warning)
                 final_response = breach_warning
             else:
-                # 精準度命中計分制，徹底解決 Token 互撞[cite: 1]
                 best_match_key = None
                 max_score = 0
                 
@@ -242,33 +231,29 @@ with tab_chat:
                         max_score = score
                         best_match_key = ch_key
                 
-                # 只有當分數大於 0 時才輸出，否則啟動兜底[cite: 1]
                 if best_match_key and max_score > 0:
                     match = CHAPTERS_DB[best_match_key]
                     d_zh = match["zh"]
                     
-                    # 🧮 計算最高合規透明度分母 (該章節定義的關鍵字總數)[cite: 1]
                     total_features = len(match["keys"])
-                    confidence_pct = (max_score / total_features) * 100[cite: 1]
+                    confidence_pct = (max_score / total_features) * 100
                     
-                    # 📝 動態抓取命中哪些字，供法務/技術團隊進行 Traceability 審計[cite: 1]
                     hit_keywords = [k for k in match["keys"] if k.lower() in cleaned_prompt.lower() or k.lower() in prompt.lower()]
-                    hit_list_str = "、".join(hit_keywords)[cite: 1]
+                    hit_list_str = "、".join(hit_keywords)
                     
-                    # 🌐 UI 渲染：專業名詞顯示，附帶置信度與審計 Tooltip 懸停框[cite: 1]
-                    st.info(f"**📖 {d_zh['title']}**")[cite: 1]
+                    st.info(f"**📖 {d_zh['title']}**")
                     
                     st.caption(
                         f"🎯 **條例匹配置信度：{confidence_pct:.1f}%** (命中 {max_score}/{total_features} 個法定特徵詞) "
                         f"ℹ️ [審計說明](## \"此分數代表您的提問精準命中了官方知識庫中關於該章節的特定關鍵字。本次命中的特徵詞包括：{hit_list_str}。系統已自動排除常見提問前綴以確保路由精準度。\")"
-                    )[cite: 1]
+                    )
                     
                     st.markdown("---")
-                    st.write(f"**⚖️ 法定核心:**\n{d_zh['statute']}")[cite: 1]
-                    st.error(f"**🚨 違法紅線:** {d_zh['red_flag']}")[cite: 1]
-                    st.warning(f"**🛡️ 治理與營運指引:**\n\n{d_zh['gov_advice']}")[cite: 1]
+                    st.write(f"**⚖️ 法定核心:**\n{d_zh['statute']}")
+                    st.error(f"**🚨 違法紅線:** {d_zh['red_flag']}")
+                    st.warning(f"**🛡️ 治理與營運指引:**\n\n{d_zh['gov_advice']}")
                     
-                    final_response = d_zh['statute'][cite: 1]
+                    final_response = d_zh['statute']
                 else:
                     fb = "🔍 **兜底導航啟動**：請查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57)"
                     st.markdown(fb)
@@ -315,13 +300,13 @@ with tab_calc:
         total_wages = st.number_input("1. 過去12個月賺取的總工資 ($)", min_value=0.0, value=150000.0, step=1000.0)
         total_days = st.number_input("2. 12個月內的總日數", min_value=1, value=365, step=1)
     with col_in2:
-        disregarded_days = st.number_input("3. 須剔除日數 (非全薪假天數)", min_value=0, value=5, step=1)
-        disregarded_wages = st.number_input("4. 剔除期間工資 ($)", min_value=0.0, value=2667.0, step=100.0)
+        disrepresented_days = st.number_input("3. 須剔除日數 (非全薪假天數)", min_value=0, value=5, step=1)
+        disrepresented_wages = st.number_input("4. 剔除期間工資 ($)", min_value=0.0, value=2667.0, step=100.0)
 
     st.markdown("---")
-    if total_days > disregarded_days:
-        adjusted_numerator = total_wages - disregarded_wages
-        adjusted_denominator = total_days - disregarded_days
+    if total_days > disrepresented_days:
+        adjusted_numerator = total_wages - disrepresented_wages
+        adjusted_denominator = total_days - disrepresented_days
         adw = adjusted_numerator / adjusted_denominator
         st.metric("每日平均工資 (ADW)", f"${adw:.2f}")
     else:
