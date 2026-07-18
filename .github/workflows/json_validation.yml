@@ -2,28 +2,47 @@
     "ch1": {
         "keys": [
             "適用範圍", "418", "468", "連續性合約", "兼職", "part-time", "散工", "炒散", "假自僱", "判頭",
-            "甚麼人士受", "保障的僱員", "誰受保障", "保障", "臨時僱員", "兼職僱員又怎樣", "家屬", "同住"
+            "甚麼人士受", "保障的僱員", "誰受保障", "保障", "臨時僱員", "兼職僱員又怎樣", "家屬", "同住", "炒散福利"
         ],
         "zh": {
             "title": "第一章：《僱傭條例》適用範圍與「468」連續性合約",
-            "statute": "【勞工處官方 Q&A 答覆】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員和兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
-            "red_flag": "致命盲區：誤以為散工或工作時數少就不受保障。事實上無論工時多少，均享有法定假日及工資保障！刻意將與僱主同住的家屬當作一般僱員進行虛假申報亦屬違規。",
-            "gov_advice": "【董事會管治】排班與人事系統必須硬編碼（Hardcode）此四大豁除群組，並將「非連續性合約」與「連續性合約」的福利分層在算式中精準對齊。\n【前線營運提示】請勿再向兼職或炒散員工宣稱『你哋冇勞工假放』，無論工時幾多，勞工假（法定假日）都係必給項目！"
+            "statute": "【勞工處官方完整問答】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員和兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
+            "red_flag": "錯誤包裝「獨立承包人（假自僱）」，或刻意打斷工時（cut更）以規避 468 門檻。",
+            "gov_advice": "【董事會管治】人事考勤系統必須硬編碼此四大豁除群組，排班系統設定防呆機制，防範「468」違規。\n【前線營運提示】請確實記錄上下班時間，切勿口頭要求員工「提早下班」惡意避開 468 門檻。"
         },
         "en": {
             "title": "Chapter 1: Application of the Ordinance & '468' Continuous Contract",
-            "statute": "The Employment Ordinance applies to all employees, including temporary and part-time employees, with the exception of:\na. An employee who is a family member of and cohabits with the employer;\nb. An employee as defined by the Contracts for Employment Outside Hong Kong Ordinance;\nc. A person who serves under a crew agreement under the Merchant Shipping (Seafarers) Ordinance, or on board a ship not registered in HK; and\nd. An apprentice registered under the Apprenticeship Ordinance.\n\nAll employees, irrespective of their working hours, are entitled to statutory holidays, wage protection, and protection against anti-union discrimination. Employees under a continuous contract (468 mechanism) are entitled to all statutory benefits.",
+            "statute": "The Employment Ordinance applies to all employees, including temporary and part-time employees, with the exception of: family members cohabiting with the employer, overseas contracts, seafarers, and registered apprentices.",
             "red_flag": "Misclassifying standard employees into excluded categories or illegally stripping part-timers of their base statutory holiday entitlements.",
-            "gov_advice": "[Governance] Systematically audit the four statutory exclusion groups to ensure strict alignment with Cap. 57 Section 4 requirements."
+            "gov_advice": "[Governance] Systematically audit the four statutory exclusion groups to ensure strict alignment with Cap. 57 requirements."
+        }
+    },
+    "ch2": {
+        "keys": [
+            "僱傭合約", "合約", "甚麼是僱傭合約", "什麼是僱傭合約", "條款", "就職前", "詳細說明", "contract of employment", 
+            "僱傭協議", "口頭方式訂立", "口頭合約", "簽約", "更改合約"
+        ],
+        "zh": {
+            "title": "第二章：僱傭合約的定義與就職前法定告知條件",
+            "statute": "【勞工處官方完整問答 - 答1】：\n僱傭合約是指僱主和僱員訂立的僱傭協議。僱傭合約可以書面或口頭方式訂立，並可包含明示或暗示的條款。\n\n《僱傭條例》規定僱主必須在僱員就職前，向他詳細說明僱用條件，包括：\n（1）工資（包括工資率、超時工作的工資率及任何津貼，無論以按件、按工、按時、按日、按週或其他方式計算）；\n（2）工資期；\n（3）終止合約所需通知期；及\n（4）如僱員享有年終酬金，則有關年終酬金、部分年終酬金和酬金期的資料。",
+            "red_flag": "入職前未以書面或清晰口頭說明上述四大法定條件，或未經僱員同意單方面更改合約核心條款，構成不合理更改合約條件或非法欠薪。",
+            "gov_advice": "【董事會管治】企業必須落實標準化 Onboarding 流程，在員工正式上班的第一分鐘前，確保雙方已簽署包含上述四大法定條件的書面合約（Employment Contract），拒絕任何「口頭試工」灰色地帶。"
+        },
+        "en": {
+            "title": "Chapter 2: Contract of Employment & Onboarding Requirements",
+            "statute": "A contract of employment is an agreement between an employer and an employee. An employer must clearly inform the employee of conditions before employment begins, including: (1) Wage rate and allowances; (2) Wage period; (3) Notice period; (4) Year-end payment details.",
+            "red_flag": "Failure to provide core terms before onboarding or unilateral variation of terms.",
+            "gov_advice": "[Governance] Enforce mandatory signing of formal employment contracts prior to the first day of work."
         }
     },
     "ch3": {
         "keys": [
-            "工資", "salary", "扣薪", "扣錢", "出糧", "遲出糧", "拖糧", "欠薪", "late pay", "爛嘢", "打破", "扣除工資", "扣人工", "尾糧"
+            "工資", "salary", "扣薪", "扣錢", "出糧", "遲出糧", "拖糧", "欠薪", "late pay", "爛嘢", "打破", 
+            "扣除工資", "扣人工", "尾糧", "清數", "出糧限期"
         ],
         "zh": {
             "title": "第三章：工資發放限期與法定扣薪限制",
-            "statute": "工資包括薪金、津貼、佣金及小費。必須在工資期屆滿後 7 天內支付。除法例明文規定（如因疏忽損壞僱主貨品每次上限$300且總額不超該期工資1/4）外，嚴禁任何扣薪。",
+            "statute": "【勞工處官方完整問答】：工資必須在工資期發放限期屆滿後 7 天內支付。除法例明文規定（如因疏忽損壞僱主貨品每次上限$300且總額不超該期工資1/4）外，嚴禁任何扣薪。",
             "red_flag": "遲發工資超過 7 天（涉及刑事罪行），或以「表現不佳 / 唔達標」為由非法扣減員工工資。",
             "gov_advice": "【董事會管治】將「欠薪」視為最高級別刑事法律風險。\n【前線營運提示】即使員工打破財產，法定每次損壞扣款上限硬性規定為 HK$300，切勿私自擴大扣款金額。"
         },
@@ -36,19 +55,21 @@
     },
     "ch11": {
         "keys": [
-            "終止僱傭合約", "解僱", "通知期", "代通知金", "辭職", "即炒", "summary dismissal", "嚴重犯錯", "偷嘢", "打交", "炒佢", "唔聽話"
+            "終止僱傭合約", "想終止", "解僱", "通知期", "代通知金", "多長的通知期", "多少代通知金", 
+            "試用期內", "無期通知", "即炒", "summary dismissal", "嚴重犯錯", "偷嘢", "打交", "炒佢", 
+            "唔聽話", "想炒", "唔聽話想炒", "炒人", "遞信", "辭職"
         ],
         "zh": {
-            "title": "第十一章：終止僱傭合約與即時解僱法定限制",
-            "statute": "終止合約需給予足夠通知期或代通知金。僅當僱員故意不服從合法合理命令、行為不當、欺詐或慣常疏忽職責時，才可無通知期「即時解僱（即炒）」且無需支付任何補償。",
-            "red_flag": "缺乏無可辯駁之嚴格違紀實證，或單憑主觀口頭「唔聽話」即進行無補償即炒。",
-            "gov_advice": "【董事會管治】落實漸進式紀律處分程序（Progressive Discipline），即時解僱必須留存完備的審計軌跡。\n【前線營運提示】遇到嚴重違紀請拍照留底並通報 HR，切勿在情緒激動下口頭宣告即炒。"
+            "title": "第十一章：終止僱傭合約、通知期與代通知金規範",
+            "statute": "【勞工處官方完整問答 - 結合截圖表格一規範】：\n如想終止僱傭合約，所需的通知期或代通知金如下：\n1. 在試用期內：\n   - 試用期內首個月：無需通知期，無需代通知金。\n   - 試用期內第一個星期後（有明確規定）：依照合約訂明，但不少於 7 天通知。\n   - 試用期內第一個星期後（無明確規定）：不少於 7 天通知。\n2. 無試用期 / 完成試用期的連續性合約：\n   - 合約有明確規定：依照合約訂明，但不少於 7 天通知。\n   - 合約無明確規定：不少於一個月通知。",
+            "red_flag": "「唔聽話」流於主管主觀感受。若缺乏多次書面警告（Warning Letter）及漸進式紀律處分紀錄，單憑口頭「唔聽話」即炒，在勞審處必被判定為不合理解僱，僱主須補付代通知金及變相賠償。",
+            "gov_advice": "【董事會管治】請對齊勞工處標準，將試用期前後的計糧公式模組化，離職審批留存完整的審計軌跡。\n【前線營運提示】如果下屬只是表現不佳或口頭頂撞，切勿在情緒激動下口頭宣告即炒，必須先發警告信（Warning Letter）留底！"
         },
         "en": {
-            "title": "Chapter 11: Termination & Summary Dismissal",
-            "statute": "Termination requires notice period or payment in lieu. Summary dismissal is strictly limited to gross misconduct (e.g., willful disobedience, fraud).",
-            "red_flag": "Abusing summary dismissal clauses without an irrefutable legal audit trail.",
-            "gov_advice": "[Governance] Summary Dismissal (Sec. 9) must remain the ultimate last resort controlled by organizational gatekeepers."
+            "title": "Chapter 11: Termination of Contracts, Notice Period & Paid in Lieu",
+            "statute": "Requirements for termination: First month of probation requires no notice. Post first month requires stipulated notice but not less than 7 days. Continuous contract without probation requires not less than 1 month notice if unstated.",
+            "red_flag": "Breaching minimum 7-day or 1-month statutory notice limits.",
+            "gov_advice": "[Governance] Implement strict date-check controls for dynamic offboarding compliance."
         }
     }
 }
