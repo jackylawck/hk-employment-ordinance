@@ -8,6 +8,7 @@ from datetime import datetime
 
 # ==========================================
 # 0. 企業級後台審計日誌初始化 (Backend Audit Logging)
+# AIGP Domain IV: 確保所有合規建議具備不可否認性 (Non-repudiation)
 # ==========================================
 logging.basicConfig(
     filename='compliance_audit.log', 
@@ -55,7 +56,7 @@ def init_and_load_knowledge_base():
             ],
             "zh": {
                 "title": "第一章：《僱傭條例》適用範圍與「468」連續性合約",
-                "statute": "【勞工處官方完整問答】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員 and 兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
+                "statute": "【勞工處官方完整問答】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員和兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
                 "red_flag": "錯誤包裝「獨立承包人（假自僱）」，或刻意打斷工時以規避 468 門檻。",
                 "gov_advice": "【董事會管治】人事考勤系統必須硬編碼此四大豁除群組，排班系統設定防呆機制，防範「468」違規。\n【前線營運提示】請確實記錄上下班時間，切勿口頭要求員工「提早下班」惡意避開 468 門檻。"
             },
@@ -114,9 +115,7 @@ def init_and_load_knowledge_base():
     }
     with open(DB_FILE_PATH, 'w', encoding='utf-8') as f:
         json.dump(full_official_db, f, ensure_ascii=False, indent=4)
-        
-    with open(DB_FILE_PATH, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    return full_official_db
 
 CHAPTERS_DB = init_and_load_knowledge_base()
 
@@ -184,7 +183,7 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Audit Trail ID: {audit_hash} | Timestamp: {timestamp} (Log secured to backend)</div>"
 
 # ==========================================
-# 5. 主畫面佈局
+# 5. 主畫面佈局與配置
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("ISO 42001 認證架構・具備多字詞分數路由與高透明度審計")
@@ -196,14 +195,14 @@ tab_chat, tab_audit, tab_calc = st.tabs([
 ])
 
 # ------------------------------------------
-# Track A: Chatbot Interface
+# Track A: Chatbot Interface (具備雙層置信度風控護欄)
 # ------------------------------------------
 with tab_chat:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"], unsafe_allow_html=True)
 
-    if prompt := st.chat_input("請輸入合規情境..."):
+    if prompt := st.chat_input("請輸入合規情境（例如：'如僱主或僱員想終止僱傭合約...'）..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -211,13 +210,16 @@ with tab_chat:
         with st.chat_message("assistant"):
             final_response = ""
             
+            # 正向語意清洗層：刨除前綴干擾
             cleaned_prompt = re.sub(r'^(甚麼是|什麼是|請問|我想問|點樣先算係|如何|點樣)', '', prompt.strip())
             
+            # 1. 第一層防禦：危險合規意圖強行攔截
             breach_warning = rule_engine.evaluate(prompt)
             if breach_warning:
                 st.error(breach_warning)
                 final_response = breach_warning
             else:
+                # 2. 多字詞高精準計分路由引擎
                 best_match_key = None
                 max_score = 0
                 
@@ -231,6 +233,7 @@ with tab_chat:
                         max_score = score
                         best_match_key = ch_key
                 
+                # 3. 第二層防禦：基於風險(Risk-Based)的雙重信度閾值網閘
                 if best_match_key and max_score > 0:
                     match = CHAPTERS_DB[best_match_key]
                     d_zh = match["zh"]
@@ -238,27 +241,45 @@ with tab_chat:
                     total_features = len(match["keys"])
                     confidence_pct = (max_score / total_features) * 100
                     
-                    hit_keywords = [k for k in match["keys"] if k.lower() in cleaned_prompt.lower() or k.lower() in prompt.lower()]
-                    hit_list_str = "、".join(hit_keywords)
-                    
-                    st.info(f"**📖 {d_zh['title']}**")
-                    
-                    st.caption(
-                        f"🎯 **條例匹配置信度：{confidence_pct:.1f}%** (命中 {max_score}/{total_features} 個法定特徵詞) "
-                        f"ℹ️ [審計說明](## \"此分數代表您的提問精準命中了官方知識庫中關於該章節的特定關鍵字。本次命中的特徵詞包括：{hit_list_str}。系統已自動排除常見提問前綴以確保路由精準度。\")"
-                    )
-                    
-                    st.markdown("---")
-                    st.write(f"**⚖️ 法定核心:**\n{d_zh['statute']}")
-                    st.error(f"**🚨 違法紅線:** {d_zh['red_flag']}")
-                    st.warning(f"**🛡️ 治理與營運指引:**\n\n{d_zh['gov_advice']}")
-                    
-                    final_response = d_zh['statute']
+                    # 🚀 網閘 A: 門檻低於 30.0% 判定為高風險瞎猜，實施「硬阻斷拒答」
+                    if confidence_pct < 30.0:
+                        st.error(
+                            f"🛑 **【系統置信度過低阻斷】(當前信度: {confidence_pct:.1f}%)**\n\n"
+                            f"您的提問過於模糊（僅命中 {max_score}/{total_features} 個特徵詞）。"
+                            f"為防範自動化偏見（Automation Bias）引發合規漏洞，系統拒絕推測答案。"
+                        )
+                        fb = "🔍 **已為您啟動安全兜底**：請直接查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57) 進行人工核對。"
+                        st.markdown(fb)
+                        final_response = fb
+                    else:
+                        # 🚀 網閘 B: 信度在 30% 到 50% 之間，放行但置頂「黃色高亮強烈警告」
+                        if confidence_pct < 50.0:
+                            st.warning(
+                                f"⚠️ **【合規預警：提示詞不夠具體】**\n\n"
+                                f"本次法規匹配之置信度偏低（僅有 **{confidence_pct:.1f}%**）。"
+                                f"系統雖為您路由至高度相關章節，但強烈建議您補全更具體的情境（例如輸入：'試用期內即炒通知期'）以獲得精準研判。"
+                            )
+                        
+                        hit_keywords = [k for k in match["keys"] if k.lower() in cleaned_prompt.lower() or k.lower() in prompt.lower()]
+                        hit_list_str = "、".join(hit_keywords)
+                        
+                        # UI 高管級別高保真渲染
+                        st.info(f"**📖 {d_zh['title']}**")
+                        st.caption(
+                            f"🎯 **條例匹配置信度：{confidence_pct:.1f}%** (命中 {max_score}/{total_features} 個法定特徵詞) "
+                            f"ℹ️ [審計說明](## \"本次命中的特徵詞包括：{hit_list_str}。系統已排除常見前綴。\")"
+                        )
+                        st.markdown("---")
+                        st.write(f"**⚖️ 法定核心:**\n{d_zh['statute']}")
+                        st.error(f"**🚨 違法紅線:** {d_flag := d_zh.get('red_flag', '未定義')}")
+                        st.warning(f"**🛡️ 治理與營運指引:**\n\n{d_zh['gov_advice']}")
+                        final_response = d_zh['statute']
                 else:
                     fb = "🔍 **兜底導航啟動**：請查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57)"
                     st.markdown(fb)
                     final_response = fb
             
+            # 4. 寫入真實的後台密碼學審計軌跡
             audit_html = generate_and_log_audit_trail(prompt, final_response)
             st.markdown(audit_html, unsafe_allow_html=True)
             st.session_state.messages.append({"role": "assistant", "content": final_response + audit_html})
@@ -311,3 +332,6 @@ with tab_calc:
         st.metric("每日平均工資 (ADW)", f"${adw:.2f}")
     else:
         st.error("⚠️ 錯誤：剔除日數不可大於總日數。")
+with st.sidebar:
+    st.header("🌐 UI Language")
+    st.write(f"當前配置: {st.session_state.lang}")
