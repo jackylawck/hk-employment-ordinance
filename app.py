@@ -35,8 +35,20 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stCheckbox > label {font-weight: 500;}
-    .audit-trail {font-family: 'Courier New', Courier, monospace; color: #6c757d; font-size: 0.8em; margin-top: 10px; border-top: 1px dashed #ced4da; padding-top: 5px;}
-    .source-tag {background-color: #f8f9fa; border-left: 3px solid #007bff; padding: 8px; margin: 5px 0; font-size: 0.9em; border-radius: 4px;}
+    .audit-trail {font-family: 'Courier New', Courier, monospace; color: #a1a1a1; font-size: 0.8em; margin-top: 10px; border-top: 1px dashed #ced4da; padding-top: 5px;}
+    
+    /* 🎯 核心修正：全主題適應硬化版 CSS 標籤 */
+    /* 強制指定深色字體與高對比背景，徹底消滅 Dark Mode 下的白底白字盲區 */
+    .source-tag {
+        background-color: #e9ecef !important; 
+        border-left: 4px solid #007bff !important; 
+        color: #212529 !important; 
+        padding: 10px !important; 
+        margin: 8px 0 !important; 
+        font-size: 0.9em !important; 
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
