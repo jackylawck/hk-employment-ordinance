@@ -1,190 +1,54 @@
 {
     "ch1": {
         "keys": [
-            "適用範圍", "418", "468", "連續性合約", "兼職", "part-time", "散工", "炒散", "假自僱", "受僱傭條例保障的僱員", 
-            "Employees protected under the Employment Ordinance", "甚麼人士受", "誰受保障", "who is protected"
+            "適用範圍", "418", "468", "連續性合約", "兼職", "part-time", "散工", "炒散", "假自僱", "判頭",
+            "甚麼人士受", "保障的僱員", "誰受保障", "保障", "臨時僱員", "兼職僱員又怎樣", "家屬", "同住"
         ],
         "zh": {
             "title": "第一章：《僱傭條例》適用範圍與「468」連續性合約",
-            "statute": "官方 Q&A 對齊：《僱傭條例》適用於所有受僱於僱傭合約的僱員（除同住家屬等極少數例外）。現行「468機制」規定：僱員連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上，即屬連續性合約，享有全面法定福利。",
-            "red_flag": "錯誤包裝「獨立承包人（假自僱）」，或刻意打斷工時以規避 468 門檻。",
-            "gov_advice": "【董事會管治】重新審視兼職排班策略，防範集體勞資索償風險。\n【前線營運】確實記錄上下班時間，切勿口頭要求員工「提早下班」惡意避開 468 門檻。"
+            "statute": "【勞工處官方 Q&A 答覆】：\n《僱傭條例》適用於所有僱員，包括臨時僱員和兼職僱員，但**不包括**下列人士：\na. 僱主家屬並與僱主同住的僱員；\nb. 《香港以外地區就業合約條例》所界定的僱員；\nc. 根據《商船（海員）條例》所指的船員協議而服務的人，或在非於香港註冊的船上服務的人；以及\nd. 按照《學徒制度條例》註冊的學徒，但《僱傭條例》內的某些條文仍適用。\n\n所有僱員，**無論他們每星期工作多少小時**，都可根據《僱傭條例》享有：\na. 法定假日；\nb. 工資保障；及\nc. 職工會不受歧視的保障。\n\n根據連續性合約工作的僱員，包括臨時僱員和兼職僱員，只要符合《僱傭條例》的要求（現行已放寬為 468 機制：連續受僱於同一僱主 4 星期或以上，4 星期內總工作時數滿 68 小時或以上），都有權享有條例下所有法定福利及保障。",
+            "red_flag": "致命盲區：誤以為散工或工作時數少就不受保障。事實上無論工時多少，均享有法定假日及工資保障！刻意將與僱主同住的家屬當作一般僱員進行虛假申報亦屬違規。",
+            "gov_advice": "【董事會管治】排班與人事系統必須硬編碼（Hardcode）此四大豁除群組，並將「非連續性合約」與「連續性合約」的福利分層在算式中精準對齊。\n【前線營運提示】請勿再向兼職或炒散員工宣稱『你哋冇勞工假放』，無論工時幾多，勞工假（法定假日）都係必給項目！"
         },
         "en": {
-            "title": "Chapter 1: Application & '468' Continuous Contract",
-            "statute": "A 'continuous contract' (468 rule) means an employee works for 4+ weeks with at least 68 hours total, entitling them to statutory benefits.",
-            "red_flag": "Misclassifying employees or artificially breaking the 468 contract.",
-            "gov_advice": "[Governance] Review rostering strategies to mitigate class action risks."
-        }
-    },
-    "ch2": {
-        "keys": [
-            "僱傭合約", "Contract of Employment", "試用期", "probation", "簽約", "更改合約", "合約條款"
-        ],
-        "zh": {
-            "title": "第二章：僱傭合約之訂立與條款變更",
-            "statute": "官方 Q&A 對齊：僱傭合約可以書面或口頭訂立。僱主在僱員就職前，必須向僱員詳細說明僱用條件。如無僱員同意，僱主不得單方面更改合約條款。",
-            "red_flag": "未經僱員同意單方面更改合約條款（如強制減薪、更改工作地點），構成不合理更改僱傭合約條款。",
-            "gov_advice": "【董事會管治】所有合約變更必須落實雙向書面同意（Mutual Consent）。\n【前線營運】任何崗位調動或薪酬調整，必須確認收妥員工親筆簽署的同意書。"
-        },
-        "en": {
-            "title": "Chapter 2: Contract of Employment & Variation of Terms",
-            "statute": "Contracts can be written or oral. Unilateral variation of terms is not permitted without mutual consent.",
-            "red_flag": "Unilateral variation of contract terms without employee consent.",
-            "gov_advice": "[Governance] Ensure all contract variations are documented with mutual written consent."
+            "title": "Chapter 1: Application of the Ordinance & '468' Continuous Contract",
+            "statute": "The Employment Ordinance applies to all employees, including temporary and part-time employees, with the exception of:\na. An employee who is a family member of and cohabits with the employer;\nb. An employee as defined by the Contracts for Employment Outside Hong Kong Ordinance;\nc. A person who serves under a crew agreement under the Merchant Shipping (Seafarers) Ordinance, or on board a ship not registered in HK; and\nd. An apprentice registered under the Apprenticeship Ordinance.\n\nAll employees, irrespective of their working hours, are entitled to statutory holidays, wage protection, and protection against anti-union discrimination. Employees under a continuous contract (468 mechanism) are entitled to all statutory benefits.",
+            "red_flag": "Misclassifying standard employees into excluded categories or illegally stripping part-timers of their base statutory holiday entitlements.",
+            "gov_advice": "[Governance] Systematically audit the four statutory exclusion groups to ensure strict alignment with Cap. 57 Section 4 requirements."
         }
     },
     "ch3": {
         "keys": [
-            "工資", "Wages", "salary", "扣薪", "扣人工", "扣錢", "出糧", "遲出糧", "拖糧", "欠薪", "late pay", "爛嘢", "打破", "扣除工資"
+            "工資", "salary", "扣薪", "扣錢", "出糧", "遲出糧", "拖糧", "欠薪", "late pay", "爛嘢", "打破", "扣除工資", "扣人工", "尾糧"
         ],
         "zh": {
             "title": "第三章：工資發放限期與法定扣薪限制",
-            "statute": "官方 Q&A 對齊：工資必須在工資期屆滿後 7 天內支付。除法例明文規定（如因疏忽損壞僱主貨品每次上限$300且總額不超該期工資1/4）外，嚴禁任何扣薪。",
-            "red_flag": "遲發工資超過 7 天（即屬拖糧/欠薪，涉刑事罪行），或以「表現不佳」非法扣人工。",
-            "gov_advice": "【董事會管治】將「欠薪」視為最高級別刑事法律風險。\n【前線營運】員工打破公司財產，法定每次損壞扣款上限硬性規定為 HK$300。"
+            "statute": "工資包括薪金、津貼、佣金及小費。必須在工資期屆滿後 7 天內支付。除法例明文規定（如因疏忽損壞僱主貨品每次上限$300且總額不超該期工資1/4）外，嚴禁任何扣薪。",
+            "red_flag": "遲發工資超過 7 天（涉及刑事罪行），或以「表現不佳 / 唔達標」為由非法扣減員工工資。",
+            "gov_advice": "【董事會管治】將「欠薪」視為最高級別刑事法律風險。\n【前線營運提示】即使員工打破財產，法定每次損壞扣款上限硬性規定為 HK$300，切勿私自擴大扣款金額。"
         },
         "en": {
             "title": "Chapter 3: Wages & Statutory Deduction Limits",
-            "statute": "Wages must be paid within 7 days. Damage to goods is capped at HK$300 deduction per instance.",
-            "red_flag": "Paying wages later than 7 days (criminal offence).",
-            "gov_advice": "[Governance] Treat 'unpaid wages' as a top-tier criminal liability."
-        }
-    },
-    "ch4_5": {
-        "keys": [
-            "休息日", "Rest Days", "法定假日", "Statutory Holidays", "放假", "例假", "勞工假", "銀行假", "紅日", "補假", "買假", "頂更"
-        ],
-        "zh": {
-            "title": "第四章：休息日與法定假日 (勞工假)",
-            "statute": "官方 Q&A 對齊：每 7 天可享不少於 1 天休息日。所有僱員均享法定假日（勞工假）。僱主不得以款項代替發放法定假日（嚴禁「買假」）。",
-            "red_flag": "強迫在休息日工作、混淆「銀行假」與「勞工假」，或違法「買假/補水代替放假」。",
-            "gov_advice": "【董事會管治】排班系統設定防呆機制，防範「七休一」違規。\n【前線營運】要求員工在紅日（勞工假）上班，必須在 60 天內補假。"
-        },
-        "en": {
-            "title": "Chapter 4: Rest Days & Statutory Holidays",
-            "statute": "1 rest day in every 7 days. Buy-out of statutory holidays is strictly prohibited.",
-            "red_flag": "Forcing work on rest days or buying out statutory holidays.",
-            "gov_advice": "[Governance] Implement system-level hardstops to prevent 1-in-7 violations."
-        }
-    },
-    "ch6": {
-        "keys": [
-            "年假", "Annual Leave", "有薪年假", "AL", "大假", "清假", "辭職扣假", "放AL", "計算年假"
-        ],
-        "zh": {
-            "title": "第六章：有薪年假之發放與核算",
-            "statute": "官方 Q&A 對齊：滿 1 年可享 7 至 14 天有薪年假。薪酬必須以過去 12 個月的每日平均工資（ADW）核算。",
-            "red_flag": "錯誤計算 ADW，或在員工遞信辭職時惡意沒收年假薪酬。",
-            "gov_advice": "【董事會管治】審核 ADW 公式是否涵蓋浮動佣金。\n【前線營運】員工辭職時未放取的大假（AL）必須折算現金，不可強行扣除或沒收。"
-        },
-        "en": {
-            "title": "Chapter 6: Paid Annual Leave Calculation",
-            "statute": "7-14 days of paid annual leave after 1 year, calculated based on the 12-month ADW.",
-            "red_flag": "Miscalculating ADW or forfeiting annual leave upon resignation.",
-            "gov_advice": "[Governance] Audit the ADW formula to include variable commissions."
-        }
-    },
-    "ch7": {
-        "keys": [
-            "病假", "Sick Leave", "疾病津貼", "SL", "醫生紙", "五分四糧", "4/5", "工傷", "射波", "詐病", "連續幾多日"
-        ],
-        "zh": {
-            "title": "第七章：疾病津貼 (有薪病假門檻)",
-            "statute": "官方 Q&A 對齊：連續病假不少於 4 天並出示合資格醫生紙，必須支付平均工資五分之四（4/5）的疾病津貼。",
-            "red_flag": "在僱員合法放取有薪病假（含工傷假）期間將其解僱，屬刑事違法行為。",
-            "gov_advice": "【董事會管治】嚴禁對放病假或工傷假的員工採取報復性解僱。\n【前線營運】連續 4 天以上交出有效醫生紙就必須支付 4/5 薪酬，病假期間絕不可炒人！"
-        },
-        "en": {
-            "title": "Chapter 7: Sickness Allowance",
-            "statute": "4+ consecutive days of sick leave with a valid MC entitles to 4/5 ADW.",
-            "red_flag": "Terminating an employee on paid sick leave is an offence.",
-            "gov_advice": "[Governance] Prohibit retaliatory dismissals against employees on sick leave."
-        }
-    },
-    "ch8_9": {
-        "keys": [
-            "產假", "Maternity Leave", "侍產假", "Paternity Leave", "生育保障", "大肚", "pregnant", "14星期", "有咗", "老婆生", "陪產"
-        ],
-        "zh": {
-            "title": "第八及九章：生育保障與男士侍產假",
-            "statute": "官方 Q&A 對齊：女性僱員可享 14 星期有薪產假。男性可享 5 天侍產假，薪酬均為 4/5 ADW。",
-            "red_flag": "解僱已發出懷孕通知的女僱員（刑事罪行）。",
-            "gov_advice": "【董事會管治】將大肚婆（孕婦）解僱決策權全面收歸法務部。\n【前線營運】得知女員工「有咗」，絕對不能以「唔聽話/KPI不達標」為由隨意即炒。"
-        },
-        "en": {
-            "title": "Chapters 8 & 9: Maternity & Paternity Leave",
-            "statute": "14 weeks paid maternity leave. 5 days paternity leave at 4/5 ADW.",
-            "red_flag": "Dismissing a pregnant employee is a criminal offence.",
-            "gov_advice": "[Governance] Centralize termination decisions regarding pregnant staff to Top Management."
-        }
-    },
-    "ch10": {
-        "keys": [
-            "僱傭保障", "Employment Protection", "不合理更改合約", "推定解僱", "不合理解僱"
-        ],
-        "zh": {
-            "title": "第十章：僱傭保障與單方面條款變更",
-            "statute": "官方 Q&A 對齊：若僱員受僱滿 24 個月無正當理由遭解僱；或僱主未經同意單方面大幅變更合約核心條款，即屬「不合理更改合約條款」，法律上構成「推定解僱」。",
-            "red_flag": "發出「限期簽署、不簽當作主動辭職」的通知書強行降職減薪。",
-            "gov_advice": "【董事會管治】任何核心條件的變更必須基於真實業務縮減，且必須取得員工雙向書面同意。"
-        },
-        "en": {
-            "title": "Chapter 10: Employment Protection",
-            "statute": "Unilateral substantial modification of core contract terms without consent constitutes Unreasonable Variation and triggers 'Constructive Dismissal'.",
-            "red_flag": "Deploying 'sign-or-resign' coercive tactics to force employee demotions.",
-            "gov_advice": "[Governance] Enforce a strict Mutual Written Consent policy for contract variations."
+            "statute": "Wages must be paid within 7 days. Deductions for damage are strictly limited to HK$300 per instance and cannot exceed 1/4 of the wage period.",
+            "red_flag": "Paying wages later than 7 days or implementing non-statutory deductions.",
+            "gov_advice": "[Governance] Implement deterministic system payroll blocks to prevent dynamic illegal wage retention."
         }
     },
     "ch11": {
         "keys": [
-            "終止僱傭合約", "Termination of Contracts of Employment", "解僱", "通知期", "代通知金", "辭職", "即炒", "summary dismissal", "嚴重犯錯", "炒人"
+            "終止僱傭合約", "解僱", "通知期", "代通知金", "辭職", "即炒", "summary dismissal", "嚴重犯錯", "偷嘢", "打交", "炒佢", "唔聽話"
         ],
         "zh": {
-            "title": "第十一章：終止僱傭合約與即時解僱",
-            "statute": "官方 Q&A 對齊：終止合約需給予足夠通知期或代通知金。僅當僱員故意不服從合法合理命令、欺詐或慣常疏忽職責時，才可無通知期「即時解僱（即炒）」。",
-            "red_flag": "缺乏書面警告紀錄，濫用「即炒」將面臨不合理解僱索償。",
-            "gov_advice": "【董事會管治】落實漸進式紀律處分程序，即時解僱需視為最後手段並留存審計軌跡。\n【前線營運】遇員工嚴重違紀請拍照留底並通報 HR，切勿情緒激動下口頭宣告「炒佢」。"
+            "title": "第十一章：終止僱傭合約與即時解僱法定限制",
+            "statute": "終止合約需給予足夠通知期或代通知金。僅當僱員故意不服從合法合理命令、行為不當、欺詐或慣常疏忽職責時，才可無通知期「即時解僱（即炒）」且無需支付任何補償。",
+            "red_flag": "缺乏無可辯駁之嚴格違紀實證，或單憑主觀口頭「唔聽話」即進行無補償即炒。",
+            "gov_advice": "【董事會管治】落實漸進式紀律處分程序（Progressive Discipline），即時解僱必須留存完備的審計軌跡。\n【前線營運提示】遇到嚴重違紀請拍照留底並通報 HR，切勿在情緒激動下口頭宣告即炒。"
         },
         "en": {
             "title": "Chapter 11: Termination & Summary Dismissal",
-            "statute": "Termination requires notice period or payment in lieu. Summary dismissal is strictly limited to serious misconduct.",
-            "red_flag": "Abusing 'Summary Dismissal' without irrefutable evidence.",
-            "gov_advice": "[Governance] Summary Dismissal must be the absolute last resort with an audit trail."
-        }
-    },
-    "ch12": {
-        "keys": [
-            "年終酬金", "End of Year Payment", "雙糧", "double pay", "花紅", "bonus", "按比例"
-        ],
-        "zh": {
-            "title": "第十二章：年終酬金 (雙糧)",
-            "statute": "官方 Q&A 對齊：如僱傭合約訂明享有年終酬金（雙糧），僱員在一個酬金期內按連續性合約受僱滿 3 個月，即可按比例獲發年終酬金（除非犯嚴重過失被即時解僱）。",
-            "red_flag": "將約定俗成的「雙糧」與酌情發放的「花紅（Bonus）」混淆，或拒絕按比例支付合約訂明的酬金。",
-            "gov_advice": "【董事會管治】在僱傭合約中明確界定該筆款項是「賞贈性質的花紅」還是「受條例保障的年終酬金」。"
-        },
-        "en": {
-            "title": "Chapter 12: End of Year Payment",
-            "statute": "If stipulated in the contract, an employee continuously employed for at least 3 months in a payment period is entitled to a pro-rata end of year payment.",
-            "red_flag": "Confusing contractual double pay with discretionary bonuses to evade payments.",
-            "gov_advice": "[Governance] Clearly define the nature of year-end payments in employment contracts."
-        }
-    },
-    "ch13": {
-        "keys": [
-            "遣散費及長期服務金", "Severance Payment and Long Service Payment", "遣散費", "長期服務金", "LSP", "SP", "裁員", "對沖", "取消對沖", "mpf"
-        ],
-        "zh": {
-            "title": "第十三章：遣散費、長期服務金與取消對沖新規",
-            "statute": "官方 Q&A 對齊：滿 24 個月裁員可獲遣散費；滿 5 年非嚴重過失解僱可獲長期服務金。強積金（MPF）對沖機制已正式取消。",
-            "red_flag": "為逃避 LSP 而在員工年資接近 5 年時進行惡意炒人。",
-            "gov_advice": "【董事會管治】因應取消強積金對沖，精算並撥備遣散費/長服金負債。\n【前線營運】終止滿 2 年年資的合約前，必須與 HR 核算 SP/LSP 負債。"
-        },
-        "en": {
-            "title": "Chapter 13: Severance, LSP & MPF Offset Abolition",
-            "statute": "SP after 24 months; LSP after 5 years. MPF offsetting mechanism is abolished.",
-            "red_flag": "Maliciously terminating staff approaching the 5-year mark.",
-            "gov_advice": "[Governance] Actuarially assess and provision for SP/LSP liabilities."
+            "statute": "Termination requires notice period or payment in lieu. Summary dismissal is strictly limited to gross misconduct (e.g., willful disobedience, fraud).",
+            "red_flag": "Abusing summary dismissal clauses without an irrefutable legal audit trail.",
+            "gov_advice": "[Governance] Summary Dismissal (Sec. 9) must remain the ultimate last resort controlled by organizational gatekeepers."
         }
     }
 }
