@@ -58,6 +58,13 @@ st.markdown("""
         margin-bottom: 10px !important;
         border: 1px solid #495057 !important;
     }
+    .file-inventory {
+        font-size: 0.85em !important;
+        color: #adb5bd !important;
+        padding-left: 10px !important;
+        border-left: 2px solid #6c757d !important;
+        margin-bottom: 5px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -65,14 +72,13 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (支援動態記憶體注入)
+# 2. RAG 本地向量資料庫引擎 (支援動態資產審計追踪)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 def process_pdf_to_chunks(pdf_file, is_uploaded=False):
-    """將 PDF 檔案進行具脈絡重疊切片，兼容本地檔案與上傳流物件"""
     filename = pdf_file.name if is_uploaded else os.path.basename(pdf_file)
     chunks = []
     try:
@@ -104,27 +110,31 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
     return chunks
 
 def build_combined_vector_db(uploaded_files):
-    """🔥 核心管治優化：結合 Git 底座 PDF 與用戶臨時動態上傳的 PDF 進行即時向量化"""
     embeddings = get_embedding_model()
     all_chunks = []
+    base_file_names = []
+    uploaded_file_names = []
     
     # 1. 讀取 Git 倉庫目錄下的固定法規底座
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
     
     for pdf_path in base_pdf_files:
+        name = os.path.basename(pdf_path)
+        base_file_names.append(name)
         all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
         
-    # 2. 注入用戶在前台動態上傳的新政策文件
+    # 2. 注入用戶動態上傳的新政策文件
     if uploaded_files:
         for uploaded_file in uploaded_files:
+            uploaded_file_names.append(uploaded_file.name)
             all_chunks.extend(process_pdf_to_chunks(uploaded_file, is_uploaded=True))
             
     if all_chunks:
         vector_db = FAISS.from_documents(all_chunks, embeddings)
-        return vector_db, len(base_pdf_files) + len(uploaded_files), len(all_chunks)
+        return vector_db, all_chunks, base_file_names, uploaded_file_names
     else:
-        return None, 0, 0
+        return None, [], [], []
 
 # ==========================================
 # 3. 🌐 決定性規則引擎層
@@ -138,10 +148,10 @@ class ControlGuardrails:
                 "🛑 **【最高級別合規危機預警：即時解僱風險重大】** ❌\n\n"
                 "**⚖️ 香港《僱傭條例》第 9 條法定規範：**\n"
                 "僱主只有在僱員犯下極度嚴重過失（例如：故意不服從合法合理的命令、欺詐不忠實、或慣常疏忽職責）時，"
-                "才可以無須通知期或代通知金「即時解僱（即炒）」[cite: 4]。\n\n"
+                "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
                 "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
-                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
+                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解傭」**。"
                 "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索處分。\n\n"
                 "**🛡️ 營運管治指引：**\n"
                 "1. **切勿**在情緒激動下口頭宣告解僱，必須即時通報 HR 啟動標準調查程序。\n"
@@ -159,7 +169,7 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染 (包含上傳功能與官方鏈接)
+# 4. 主畫面與側邊欄渲染 (包含資產審計清冊)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
@@ -171,7 +181,7 @@ st.warning(
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
-# 🚀 側邊欄升級：整合官方連結與動態上傳組件
+# 🚀 側邊欄動態變更
 with st.sidebar:
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
@@ -179,21 +189,41 @@ with st.sidebar:
     st.markdown("---")
     
     st.header("📂 動態法規擴充")
-    # 提供文件不落地的臨時記憶體 RAG 上傳閘口
     uploaded_files = st.file_uploader(
         "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
         type=["pdf"], 
         accept_multiple_files=True,
-        help="上傳之文件僅保存在當前密封瀏覽器會話的暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
+        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
     )
     st.markdown("---")
     
-    # 根據前台是否有上傳動態重新建構資料庫
-    VECTOR_DB, PDF_COUNT, CHUNK_COUNT = build_combined_vector_db(uploaded_files)
+    # 執行 RAG 引擎初始化，獲取文件名列表
+    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(uploaded_files)
+    TOTAL_PDF_COUNT = len(BASE_FILES) + len(UPLOADED_FILES)
+    TOTAL_CHUNK_COUNT = len(ALL_CHUNKS)
     
     st.header("📊 向量資料庫審計監控")
-    st.metric("當前已加載 PDF 總數", f"{PDF_COUNT} 份")
-    st.metric("解構法規文字切片 (Chunks)", f"{CHUNK_COUNT} 個")
+    st.metric("當前已加載 PDF 總數", f"{TOTAL_PDF_COUNT} 份")
+    st.metric("解構法規文字切片 (Chunks)", f"{TOTAL_CHUNK_COUNT} 個")
+    
+    # 🔥 【核心管治優化】：高透明度法規清冊看板與 GitHub 鏈接對齊
+    st.subheader("📋 知識庫加載清冊 (Asset Log)")
+    
+    # GitHub 項目倉庫基礎網址 (動態拼貼對齊代碼庫)
+    github_repo_url = "https://github.com/jackylawck/hk-employment-ordinance/blob/main"
+    
+    st.markdown("**📁 Git 本地法規底座 (點擊跳轉源碼鏈接):**")
+    if BASE_FILES:
+        for f_name in BASE_FILES:
+            # 點擊即可直接超連結回到 GitHub 倉庫看 PDF 原檔，實現 100% 審計透明度
+            st.markdown(f"<div class='file-inventory'>📦 <a href='{github_repo_url}/{f_name}' target='_blank' style='color:#007bff; text-decoration:none;'>{f_name}</a></div>", unsafe_allow_html=True)
+    else:
+        st.markdown("<div class='file-inventory'>❌ 未偵測到本地法規底座</div>", unsafe_allow_html=True)
+        
+    if UPLOADED_FILES:
+        st.markdown("**⏳ 會話臨時記憶體注入 (揮發性資料):**")
+        for f_name in UPLOADED_FILES:
+            st.markdown(f"<div class='file-inventory'>📥 {f_name} (臨時鎖定)</div>", unsafe_allow_html=True)
 
 # ==========================================
 # 5. 聊天與對話分流
@@ -220,7 +250,7 @@ with tab_chat:
                 st.markdown(intercepted_advice, unsafe_allow_html=True)
                 final_response = intercepted_advice
             elif VECTOR_DB is None:
-                st.error("🛑 **系統管治警報：** 知識庫尚未加載任何文件！請檢查專案目錄或於左側上傳 PDF。")
+                st.error("🛑 **系統管治警報：** 知識庫尚未加載任何文件！")
                 final_response = "未偵測到知識庫文件。"
             else:
                 # 執行向量空間語意檢索
