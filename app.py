@@ -65,23 +65,23 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (路徑硬化防線)
+# 2. RAG 本地向量資料庫引擎 (支援動態記憶體注入)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
-def process_pdf_to_chunks(pdf_path):
-    filename = os.path.basename(pdf_path)
+def process_pdf_to_chunks(pdf_file, is_uploaded=False):
+    """將 PDF 檔案進行具脈絡重疊切片，兼容本地檔案與上傳流物件"""
+    filename = pdf_file.name if is_uploaded else os.path.basename(pdf_file)
     chunks = []
     try:
-        reader = PdfReader(pdf_path)
+        reader = PdfReader(pdf_file)
         for page_num, page in enumerate(reader.pages, start=1):
             text = page.extract_text()
             if not text:
                 continue
             
-            # 適度縮短 Chunk 提升檢索顆粒度
             chunk_size = 300
             overlap = 50
             start = 0
@@ -103,32 +103,35 @@ def process_pdf_to_chunks(pdf_path):
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
 
-@st.cache_resource(show_spinner="📚 向量資料庫正在掃描並加載官方 PDF 文件...")
-def initialize_vector_db():
+def build_combined_vector_db(uploaded_files):
+    """🔥 核心管治優化：結合 Git 底座 PDF 與用戶臨時動態上傳的 PDF 進行即時向量化"""
     embeddings = get_embedding_model()
     all_chunks = []
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
     
-    for pdf_path in pdf_files:
-        all_chunks.extend(process_pdf_to_chunks(pdf_path))
+    # 1. 讀取 Git 倉庫目錄下的固定法規底座
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    base_pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
+    
+    for pdf_path in base_pdf_files:
+        all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
         
+    # 2. 注入用戶在前台動態上傳的新政策文件
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            all_chunks.extend(process_pdf_to_chunks(uploaded_file, is_uploaded=True))
+            
     if all_chunks:
         vector_db = FAISS.from_documents(all_chunks, embeddings)
-        return vector_db, len(pdf_files), len(all_chunks)
+        return vector_db, len(base_pdf_files) + len(uploaded_files), len(all_chunks)
     else:
         return None, 0, 0
 
-VECTOR_DB, PDF_COUNT, CHUNK_COUNT = initialize_vector_db()
-
 # ==========================================
-# 3. 🌐 混合網閘控制層 (移除全部殘留 Citation)
+# 3. 🌐 決定性規則引擎層
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
         q = query.lower()
-        
-        # 攔截點 1：即時解僱危機
         if any(w in q for w in ["唔聽話", "想炒", "即炒", "炒佢", "解僱", "不服從"]):
             return (
                 "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
@@ -156,7 +159,7 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面佈局渲染
+# 4. 主畫面與側邊欄渲染 (包含上傳功能與官方鏈接)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
@@ -168,13 +171,33 @@ st.warning(
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
+# 🚀 側邊欄升級：整合官方連結與動態上傳組件
 with st.sidebar:
-    st.header("📊 向量資料庫審計監控")
-    st.metric("已加載官方 PDF 數量", f"{PDF_COUNT} 份")
-    st.metric("解構法規文字切片 (Chunks)", f"{CHUNK_COUNT} 個")
+    st.header("🔗 官方權威渠道")
+    st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
+    st.markdown("📞 **勞工處查詢熱線：2717 1771**")
     st.markdown("---")
-    st.markdown("💡 **AIGP 治理提示：** 系統已啟用『混合檢索增益（Hybrid RAG Optimization）』，精準兼容港式口語與法規書面語。")
+    
+    st.header("📂 動態法規擴充")
+    # 提供文件不落地的臨時記憶體 RAG 上傳閘口
+    uploaded_files = st.file_uploader(
+        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
+        type=["pdf"], 
+        accept_multiple_files=True,
+        help="上傳之文件僅保存在當前密封瀏覽器會話的暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
+    )
+    st.markdown("---")
+    
+    # 根據前台是否有上傳動態重新建構資料庫
+    VECTOR_DB, PDF_COUNT, CHUNK_COUNT = build_combined_vector_db(uploaded_files)
+    
+    st.header("📊 向量資料庫審計監控")
+    st.metric("當前已加載 PDF 總數", f"{PDF_COUNT} 份")
+    st.metric("解構法規文字切片 (Chunks)", f"{CHUNK_COUNT} 個")
 
+# ==========================================
+# 5. 聊天與對話分流
+# ==========================================
 tab_chat, tab_audit = st.tabs(["💬 官方 FAQ 情境導航 (RAG)", "📋 基礎風險排查"])
 
 with tab_chat:
@@ -190,53 +213,45 @@ with tab_chat:
         with st.chat_message("assistant"):
             final_response = ""
             
-            # 網閘第一層：精準規則攔截
+            # 第一層網閘：精準規則攔截
             intercepted_advice = guardrails.evaluate(prompt)
             
             if intercepted_advice:
                 st.markdown(intercepted_advice, unsafe_allow_html=True)
                 final_response = intercepted_advice
             elif VECTOR_DB is None:
-                st.error("🛑 **系統管治警報：** 未偵測到任何官方 PDF 檔案！")
+                st.error("🛑 **系統管治警報：** 知識庫尚未加載任何文件！請檢查專案目錄或於左側上傳 PDF。")
                 final_response = "未偵測到知識庫文件。"
             else:
                 # 執行向量空間語意檢索
                 docs_and_scores = VECTOR_DB.similarity_search_with_score(prompt, k=3)
                 
-                # 🔥 【AIGP 開發調優】動態混合信度修正演算法 (消滅廣東話分詞帶來的 0.0% 盲區)
+                # 第二層網閘：動態混合信度修正
                 top_doc, top_score = docs_and_scores[0]
-                
-                # 平滑歐氏距離映射公式，防止極限歸零
                 base_confidence = max(5.0, min(95.0, (1.2 - (top_score / 2.5)) * 100))
                 
-                # 🛠️ 混合關鍵字加權增益 (Keyword Boost Layer)
                 boost_score = 0
                 q_lower = prompt.lower()
                 if "468" in q_lower or "連續性" in q_lower: boost_score += 65
                 if any(w in q_lower for w in ["減人工", "扣薪", "扣錢", "工資"]): boost_score += 60
                 if any(w in q_lower for w in ["減福利", "改合約", "更改條款"]): boost_score += 60
                 
-                # 計算最終置信度
                 final_confidence = max(base_confidence, boost_score)
                 if final_confidence > 100.0: final_confidence = 100.0
                 
-                # 🔥 風控熔斷閾值微調至 25% (提升系統可用性，同時防範純垃圾輸入)
                 if final_confidence < 25.0:
                     st.error(
                         f"🛑 **【系統置信度過低阻斷】(最高匹配信度僅: {final_confidence:.1f}%)**\n\n"
                         f"您的提問語意過於模糊。為防止自動化偏見引發合規偏差，系統拒絕盲猜答案。"
                     )
-                    fb = "🔍 **已為您啟動安全兜底**：請直接查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57) 或前往上述勞工處官方網站核對。"
+                    fb = "🔍 **已為您啟動安全兜底**：請直接查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57) 或點擊左側連結前往勞工處官網核對。"
                     st.markdown(fb)
                     final_response = fb
                 else:
                     st.success("🎯 **RAG 語意檢索完成！已為您勾勒出最高相關度之官方原始條文：**")
-                    
-                    # 在頂部顯示最終修正後的真實置信度
                     st.markdown(f"<div class='confidence-badge'>🎯 綜合匹配置信度：{final_confidence:.1f}%</div>", unsafe_allow_html=True)
                     
                     for doc, score in docs_and_scores:
-                        # 單個面板內顯示語意距離換算的參考值
                         chunk_conf = max(5.0, min(95.0, (1.2 - (score / 2.5)) * 100))
                         if boost_score > chunk_conf: chunk_conf = boost_score
                         
