@@ -46,6 +46,17 @@ st.markdown("""
         border-radius: 4px !important;
         font-weight: 500 !important;
     }
+    .confidence-badge {
+        background-color: #343a40 !important;
+        color: #f8f9fa !important;
+        padding: 6px 12px !important;
+        border-radius: 20px !important;
+        font-size: 0.85em !important;
+        font-weight: bold !important;
+        display: inline-block !important;
+        margin-bottom: 10px !important;
+        border: 1px solid #495057 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -109,14 +120,14 @@ def initialize_vector_db():
 VECTOR_DB, PDF_COUNT, CHUNK_COUNT = initialize_vector_db()
 
 # ==========================================
-# 3. 🌐 【AIGP 治理硬化】決定性規則引擎層 (Deterministic Rule Layer)
+# 3. 🌐 決定性規則引擎層 (Deterministic Rule Layer)
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
         q = query.lower()
-        # 針對「唔聽話、炒、解僱」等高危口語實施精準法規攔截與主動防禦
         if any(w in q for w in ["唔聽話", "想炒", "即炒", "炒佢", "解僱", "不服從"]):
             return (
+                "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
                 "🛑 **【最高級別合規危機預警：即時解僱風險重大】** ❌\n\n"
                 "**⚖️ 香港《僱傭條例》第 9 條法定規範：**\n"
                 "僱主只有在僱員犯下極度嚴重過失（例如：故意不服從合法合理的命令、欺詐不忠實、或慣常疏忽職責）時，"
@@ -144,14 +155,22 @@ def generate_and_log_audit_trail(query, response_text):
 # 4. 主畫面佈局渲染
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
-st.subheader("RAG 向量資料庫架融 • 具備動態防禦網閘與語意追溯")
+st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
+
+# 🔥 【AIGP 核心修復：當眼處頂置官方聲明免責欄】
+st.warning(
+    "⚠️ **【企業合規重要聲明 & 免責宣告】**\n\n"
+    "本系統為人工智能輔助診斷工具，其檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**[cite: 4]。"
+    "AI 系統可能因語意邊界或提示詞不全而產生判斷偏差。遇到重大勞資決策，請務必以 **[特區政府勞工處官方網站](https://www.labour.gov.hk/)** "
+    "發布的主體條文與指引為最終權依歸，或尋求專業法律顧問意見[cite: 4]。"
+)
 
 with st.sidebar:
     st.header("📊 向量資料庫審計監控")
     st.metric("已加載官方 PDF 數量", f"{PDF_COUNT} 份")
     st.metric("解構法規文字切片 (Chunks)", f"{CHUNK_COUNT} 個")
     st.markdown("---")
-    st.markdown("💡 **AIGP 治理提示：** 系統已熔接『決定性網閘』防護欄，當 RAG 匹配置信度過低或觸發高危核心字眼時，系統將實施強制安全阻斷或精準法規預警。")
+    st.markdown("💡 **AIGP 治理提示：** 系統已熔接『動態信度看板』。凡置信度低於 45% 的模糊查詢將被硬熔斷拒答，確保合規安全性。")
 
 tab_chat, tab_audit = st.tabs(["💬 官方 FAQ 情境導航 (RAG)", "📋 基礎風險排查"])
 
@@ -168,11 +187,11 @@ with tab_chat:
         with st.chat_message("assistant"):
             final_response = ""
             
-            # 🔥 網閘第一層：高危勞資糾紛決定性精準攔截 (優先級最高)
+            # 網閘第一層：高危勞資糾紛決定性精準攔截
             intercepted_advice = guardrails.evaluate(prompt)
             
             if intercepted_advice:
-                st.error(intercepted_advice)
+                st.markdown(intercepted_advice, unsafe_allow_html=True)
                 final_response = intercepted_advice
             elif VECTOR_DB is None:
                 st.error("🛑 **系統管治警報：** 未偵測到任何官方 PDF 檔案！")
@@ -181,16 +200,16 @@ with tab_chat:
                 # 執行向量空間語意檢索
                 docs_and_scores = VECTOR_DB.similarity_search_with_score(prompt, k=3)
                 
-                # 🔥 網閘第二層：動態信度閥門控制 (嚴防 0.0% 的問非所答幻覺)
+                # 網閘第二層：動態信度閥門控制
                 top_doc, top_score = docs_and_scores[0]
                 normalized_top_confidence = max(0.0, min(100.0, (1.0 - (top_score / 2.0)) * 100))
                 
                 if normalized_top_confidence < 45.0:
                     st.error(
                         f"🛑 **【系統置信度過低阻斷】(最高匹配信度僅: {normalized_top_confidence:.1f}%)**\n\n"
-                        f"您的提問語意在當前官方 PDF 知識庫中匹配密度極低。為防止自動化偏見引發合規偏差，系統拒絕盲猜答案。"
+                        f"您的提問語意在當前官方 PDF 知識庫中匹配密度極低（低於 45.0% 阻斷線）。為防止自動化偏見引發合規偏差，系統拒絕盲猜答案。"
                     )
-                    fb = "🔍 **已為您啟動安全兜底**：請直接查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57) 或查看側邊欄確認 PDF 上傳完整性。"
+                    fb = "🔍 **已為您啟動安全兜底**：請直接查閱 [官方 Cap. 57 原文](https://www.elegislation.gov.hk/hk/cap57) 或前往上述勞工處官方網站核對。"
                     st.markdown(fb)
                     final_response = fb
                 else:
@@ -201,6 +220,7 @@ with tab_chat:
                         page_num = doc.metadata["page"]
                         chunk_hash = doc.metadata["hash"]
                         
+                        # 渲染帶有清晰動態信度與全主題適應標籤的擴展面板
                         with st.expander(f"📄 來源：{source_file} (第 {page_num} 頁) | 匹配置信度：{confidence:.1f}%", expanded=True):
                             st.markdown(f"**【官方原始答覆文本】**\n\n{doc.page_content}")
                             st.markdown(
@@ -210,7 +230,7 @@ with tab_chat:
                             )
                             final_response += f"[{source_file} Page {page_num}]: {doc.page_content}\n\n"
             
-            audit_html = audit_html = generate_and_log_audit_trail(prompt, final_response)
+            audit_html = generate_and_log_audit_trail(prompt, final_response)
             st.markdown(audit_html, unsafe_allow_html=True)
             st.session_state.messages.append({"role": "assistant", "content": final_response + audit_html})
 
