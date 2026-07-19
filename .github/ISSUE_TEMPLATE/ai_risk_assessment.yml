@@ -28,10 +28,10 @@ body:
       label: 3. 涉及的數據類別 (Data Categories Involved)
       description: "請剔選此系統將處理的所有數據類型："
       options:
-        - "🟢 一般公開資料 (Publicly Available Data)"
-        - "🟡 企業內部機密 (Confidential Corporate Data)"
-        - "🔴 員工個人資料 (Employee PII - e.g., 履歷, 薪酬, 評核)"
-        - "🔴 客戶個人資料 (Customer PII)"
+        - label: "🟢 一般公開資料 (Publicly Available Data)"
+        - label: "🟡 企業內部機密 (Confidential Corporate Data)"
+        - label: "🔴 員工個人資料 (Employee PII - e.g., 履歷, 薪酬, 評核)"
+        - label: "🔴 客戶個人資料 (Customer PII)"
     validations:
       required: true
   - type: dropdown
