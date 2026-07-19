@@ -1,0 +1,54 @@
+name: "⚖️ AI System Risk Assessment (AIIA) Intake"
+description: "Submit a new AI tool or system for HR & governance compliance review."
+title: "[AIIA Review]: <System/Tool Name>"
+labels: ["compliance-check", "risk-assessment"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 企業 AI 系統引入審查表 (Enterprise AI Intake Form)
+        請詳細填寫以下資訊，以便管治團隊依據 ISO 42001 及 PCPD 指引進行合規風險評估。
+  - type: input
+    id: tool_name
+    attributes:
+      label: 1. AI 系統 / 工具名稱 (System Name & Vendor)
+      placeholder: "e.g., Microsoft 365 Copilot, 外部供應商的 CV 篩選系統..."
+    validations:
+      required: true
+  - type: textarea
+    id: business_case
+    attributes:
+      label: 2. 業務應用場景 (Business Use Case)
+      description: "這個 AI 將被用在什麼流程？(例如：招聘初篩、績效評估、日常行政)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: data_privacy
+    attributes:
+      label: 3. 涉及的數據類別 (Data Categories Involved)
+      description: "請剔選此系統將處理的所有數據類型："
+      options:
+        - "🟢 一般公開資料 (Publicly Available Data)"
+        - "🟡 企業內部機密 (Confidential Corporate Data)"
+        - "🔴 員工個人資料 (Employee PII - e.g., 履歷, 薪酬, 評核)"
+        - "🔴 客戶個人資料 (Customer PII)"
+    validations:
+      required: true
+  - type: dropdown
+    id: high_risk
+    attributes:
+      label: 4. 高風險自動化決策 (High-Risk Automated Decision)
+      description: "此系統是否會自主作出對員工或客戶具重大法律/營運影響的決策？"
+      options:
+        - "是 (Yes - 系統全自動決策，無人工干預)"
+        - "部分 (Partial - 系統提供評分/建議，人類作最終決定)"
+        - "否 (No - 純輔助性質，如內部文件文本摘要)"
+    validations:
+      required: true
+  - type: textarea
+    id: hitl
+    attributes:
+      label: 5. 人工監督機制 (Human-in-the-Loop Oversight)
+      description: "請說明將如何安排指定人員 (Human Reviewer) 審核 AI 的輸出結果，以防止算法偏見或幻覺？"
+    validations:
+      required: true
