@@ -36,6 +36,8 @@ st.markdown("""
     footer {visibility: hidden;}
     .stCheckbox > label {font-weight: 500;}
     .audit-trail {font-family: 'Courier New', Courier, monospace; color: #a1a1a1; font-size: 0.8em; margin-top: 10px; border-top: 1px dashed #ced4da; padding-top: 5px;}
+    
+    /* 全主題適應硬化版 CSS 標籤 */
     .source-tag {
         background-color: #e9ecef !important; 
         border-left: 4px solid #007bff !important; 
@@ -120,7 +122,7 @@ def initialize_vector_db():
 VECTOR_DB, PDF_COUNT, CHUNK_COUNT = initialize_vector_db()
 
 # ==========================================
-# 3. 🌐 決定性規則引擎層 (Deterministic Rule Layer)
+# 3. 🌐 決定性規則引擎層 (移除所有殘留 Citation 標記)
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
@@ -134,11 +136,11 @@ class ControlGuardrails:
                 "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
                 "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
-                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**[cite: 4]。"
-                "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索變相處分[cite: 4]。\n\n"
+                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
+                "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索變相處分。\n\n"
                 "**🛡️ 營運管治指引：**\n"
-                "1. **切勿**在情緒激動下口頭宣告解僱，必須即時通報 HR 啟動標準調查程序[cite: 4]。\n"
-                "2. 嚴格審查考勤系統，確認該員工是否正處於 **「懷孕生育保障期」** 或 **「有薪病假期間」**，這兩類情境即炒屬刑事罪行，最高罰款 10 萬元[cite: 4]！"
+                "1. **切勿**在情緒激動下口頭宣告解僱，必須即時通報 HR 啟動標準調查程序。\n"
+                "2. 嚴格審查考勤系統，確認該員工是否正處於 **「懷孕生育保障期」** 或 **「有薪病假期間」**，這兩類情境即炒屬刑事罪行，最高罰款 10 萬元！"
             )
         return None
 
@@ -157,12 +159,12 @@ def generate_and_log_audit_trail(query, response_text):
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
 
-# 🔥 【AIGP 核心修復：當眼處頂置官方聲明免責欄】
+# 🔥 核心修正：乾淨無文字污染的頂置官方免責宣告
 st.warning(
     "⚠️ **【企業合規重要聲明 & 免責宣告】**\n\n"
-    "本系統為人工智能輔助診斷工具，其檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**[cite: 4]。"
+    "本系統為人工智能輔助診斷工具，其檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**。"
     "AI 系統可能因語意邊界或提示詞不全而產生判斷偏差。遇到重大勞資決策，請務必以 **[特區政府勞工處官方網站](https://www.labour.gov.hk/)** "
-    "發布的主體條文與指引為最終權依歸，或尋求專業法律顧問意見[cite: 4]。"
+    "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
 with st.sidebar:
@@ -220,7 +222,6 @@ with tab_chat:
                         page_num = doc.metadata["page"]
                         chunk_hash = doc.metadata["hash"]
                         
-                        # 渲染帶有清晰動態信度與全主題適應標籤的擴展面板
                         with st.expander(f"📄 來源：{source_file} (第 {page_num} 頁) | 匹配置信度：{confidence:.1f}%", expanded=True):
                             st.markdown(f"**【官方原始答覆文本】**\n\n{doc.page_content}")
                             st.markdown(
