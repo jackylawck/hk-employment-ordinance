@@ -65,6 +65,14 @@ st.markdown("""
         border-left: 2px solid #6c757d !important;
         margin-bottom: 5px !important;
     }
+    /* 告示牌專用高級樣式 */
+    .smw-alert-box {
+        background-color: #3e2723 !important;
+        border-left: 4px solid #ffb74d !important;
+        padding: 10px !important;
+        border-radius: 4px !important;
+        margin-bottom: 15px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -72,7 +80,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (支援動態資產審計追踪)
+# 2. RAG 本地向量資料庫引擎
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
@@ -115,7 +123,6 @@ def build_combined_vector_db(uploaded_files):
     base_file_names = []
     uploaded_file_names = []
     
-    # 1. 讀取 Git 倉庫目錄下的固定法規底座
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
     
@@ -124,7 +131,6 @@ def build_combined_vector_db(uploaded_files):
         base_file_names.append(name)
         all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
         
-    # 2. 注入用戶動態上傳的新政策文件
     if uploaded_files:
         for uploaded_file in uploaded_files:
             uploaded_file_names.append(uploaded_file.name)
@@ -151,7 +157,7 @@ class ControlGuardrails:
                 "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
                 "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
-                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解傭」**。"
+                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
                 "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索處分。\n\n"
                 "**🛡️ 營運管治指引：**\n"
                 "1. **切勿**在情緒激動下口頭宣告解僱，必須即時通報 HR 啟動標準調查程序。\n"
@@ -169,23 +175,36 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染 (包含資產審計清冊)
+# 4. 主畫面與側邊欄渲染 (內嵌最低工資特設權威欄)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
 
 st.warning(
     "⚠️ **【企業合規重要聲明 & 免責宣告】**\n\n"
-    "本系統為人工智能輔助診斷工具，其檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**。"
+    "本系統為人工智能輔助診斷工具，其檢檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**。"
     "AI 系統可能因語意邊界或提示詞不全而產生判斷偏差。遇到重大勞資決策，請務必以 **[特區政府勞工處官方網站](https://www.labour.gov.hk/)** "
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
-# 🚀 側邊欄動態變更
+# 🚀 側邊欄高階進化版
 with st.sidebar:
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
+    st.markdown("---")
+    
+    # 🔥 【老細戰略硬化】：特設最低工資動態權威錨點告示牌
+    st.header("💰 法定最低工資動態看板")
+    st.markdown(
+        "<div class='smw-alert-box'>"
+        "⚠️ <b>管治提示：</b> 法定最低工資（SMW）具備高度動態時效性（如2026年5月1日起調升至每小時 $43.1 且總工時紀錄上限上調至 $17,600）。"
+        "為嚴防法規滯後風險，計糧精算請務必一鍵跳轉交叉核對官方最新公告："
+        "</div>", 
+        unsafe_allow_html=True
+    )
+    st.markdown("📢 **[最新法定最低工資 - 官方中文專頁](https://www.labour.gov.hk/tc/news/mwo.htm)**")
+    st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
     st.markdown("---")
     
     st.header("📂 動態法規擴充")
@@ -197,7 +216,6 @@ with st.sidebar:
     )
     st.markdown("---")
     
-    # 執行 RAG 引擎初始化，獲取文件名列表
     VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(uploaded_files)
     TOTAL_PDF_COUNT = len(BASE_FILES) + len(UPLOADED_FILES)
     TOTAL_CHUNK_COUNT = len(ALL_CHUNKS)
@@ -206,16 +224,12 @@ with st.sidebar:
     st.metric("當前已加載 PDF 總數", f"{TOTAL_PDF_COUNT} 份")
     st.metric("解構法規文字切片 (Chunks)", f"{TOTAL_CHUNK_COUNT} 個")
     
-    # 🔥 【核心管治優化】：高透明度法規清冊看板與 GitHub 鏈接對齊
     st.subheader("📋 知識庫加載清冊 (Asset Log)")
-    
-    # GitHub 項目倉庫基礎網址 (動態拼貼對齊代碼庫)
     github_repo_url = "https://github.com/jackylawck/hk-employment-ordinance/blob/main"
     
     st.markdown("**📁 Git 本地法規底座 (點擊跳轉源碼鏈接):**")
     if BASE_FILES:
         for f_name in BASE_FILES:
-            # 點擊即可直接超連結回到 GitHub 倉庫看 PDF 原檔，實現 100% 審計透明度
             st.markdown(f"<div class='file-inventory'>📦 <a href='{github_repo_url}/{f_name}' target='_blank' style='color:#007bff; text-decoration:none;'>{f_name}</a></div>", unsafe_allow_html=True)
     else:
         st.markdown("<div class='file-inventory'>❌ 未偵測到本地法規底座</div>", unsafe_allow_html=True)
@@ -253,7 +267,6 @@ with tab_chat:
                 st.error("🛑 **系統管治警報：** 知識庫尚未加載任何文件！")
                 final_response = "未偵測到知識庫文件。"
             else:
-                # 執行向量空間語意檢索
                 docs_and_scores = VECTOR_DB.similarity_search_with_score(prompt, k=3)
                 
                 # 第二層網閘：動態混合信度修正
