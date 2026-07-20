@@ -1,6 +1,6 @@
 streamlit
-sentence-transformers
-faiss-cpu
-pypdf
+pdfplumber
 langchain-core
 langchain-community
+faiss-cpu
+sentence-transformers
