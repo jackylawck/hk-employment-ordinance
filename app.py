@@ -5,7 +5,7 @@ import hashlib
 import logging
 from datetime import datetime
 
-# 🎯 核心更換：引入更強大的 PDF 文字提取引擎
+# 引入強力 PDF 文字提取引擎
 import pdfplumber
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -83,7 +83,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (pdfplumber 強力解鎖版)
+# 2. RAG 本地向量資料庫引擎 (pdfplumber)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
@@ -93,17 +93,15 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
     filename = pdf_file.name if is_uploaded else os.path.basename(pdf_file)
     chunks = []
     try:
-        # 🔥 改用 pdfplumber 開啟，徹底解鎖複雜版面與中文字型
         with pdfplumber.open(pdf_file) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
                 text = page.extract_text()
                 if not text:
                     continue
                 
-                # 清理異常多餘的空白字元，保持法規整潔度
                 text = re.sub(r'\s+', ' ', text).strip()
                 
-                chunk_size = 400  # 稍微擴大視野範圍
+                chunk_size = 400
                 overlap = 80
                 start = 0
                 while start < len(text):
@@ -136,7 +134,6 @@ def build_combined_vector_db(uploaded_files):
     for pdf_path in base_pdf_files:
         name = os.path.basename(pdf_path)
         base_file_names.append(name)
-        # 直接傳遞路徑字串給處理函數
         all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
         
     if uploaded_files:
@@ -183,7 +180,7 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染
+# 4. 主畫面與側邊欄渲染 (依據老闆戰略排序優化)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
@@ -195,38 +192,21 @@ st.warning(
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
+# 🚀 側邊欄：依指定優先權重新排版
 with st.sidebar:
-    st.header("🔗 官方權威渠道")
-    st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
-    st.markdown("📞 **勞工處查詢熱線：2717 1771**")
-    st.markdown("---")
     
-    st.header("💰 法定最低工資動態看板")
-    st.markdown(
-        "<div class='smw-alert-box'>"
-        "⚠️ <b>管治提示：</b> 法定最低工資（SMW）具備高度動態時效性（如2026年5月1日起調升至每小時 $43.1 且總工時紀錄上限上調至 $17,600）。"
-        "為嚴防法規滯後風險，計糧精算請務必一鍵跳轉交叉核對官方最新公告："
-        "</div>", 
-        unsafe_allow_html=True
-    )
-    st.markdown("📢 **[最新法定最低工資 - 官方中文專頁](https://www.labour.gov.hk/tc/news/mwo.htm)**")
-    st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
-    st.markdown("---")
+    # 📌 1. 📊 向量資料庫審計監控 (頂置首位)
+    st.header("📊 向量資料庫審計監控")
     
-    st.header("📂 動態法規擴充")
-    uploaded_files = st.file_uploader(
-        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
-        type=["pdf"], 
-        accept_multiple_files=True,
-        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
-    )
-    st.markdown("---")
-    
-    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(uploaded_files)
+    # 事先在內存中構建資料庫，以便動態獲取數量指標
+    # 在 file_uploader 之前先設置一個空容器，或直接將上傳組件置於下方，代碼動態抓取
+    if 'temp_uploaded_files' not in st.session_state:
+        st.session_state.temp_uploaded_files = None
+        
+    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(st.session_state.temp_uploaded_files)
     TOTAL_PDF_COUNT = len(BASE_FILES) + len(UPLOADED_FILES)
     TOTAL_CHUNK_COUNT = len(ALL_CHUNKS)
     
-    st.header("📊 向量資料庫審計監控")
     st.metric("當前已加載 PDF 總數", f"{TOTAL_PDF_COUNT} 份")
     st.metric("解構法規文字切片 (Chunks)", f"{TOTAL_CHUNK_COUNT} 個")
     
@@ -244,6 +224,42 @@ with st.sidebar:
         st.markdown("**⏳ 會話臨時記憶體注入 (揮發性資料):**")
         for f_name in UPLOADED_FILES:
             st.markdown(f"<div class='file-inventory'>📥 {f_name} (臨時鎖定)</div>", unsafe_allow_html=True)
+            
+    st.markdown("---")
+    
+    # 📌 2. 📂 動態法規擴充 (第二順位)
+    st.header("📂 動態法規擴充")
+    ui_uploaded_files = st.file_uploader(
+        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
+        type=["pdf"], 
+        accept_multiple_files=True,
+        key="file_uploader_gate",
+        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
+    )
+    # 狀態同步鎖，確保即時刷新監控看板
+    if ui_uploaded_files != st.session_state.temp_uploaded_files:
+        st.session_state.temp_uploaded_files = ui_uploaded_files
+        st.rerun()
+        
+    st.markdown("---")
+    
+    # 📌 3. 💰 法定最低工資動態看板 (第三順位)
+    st.header("💰 法定最低工資動態看板")
+    st.markdown(
+        "<div class='smw-alert-box'>"
+        "⚠️ <b>管治提示：</b> 法定最低工資（SMW）具備高度動態時效性（如2026年5月1日起調升至每小時 $43.1 且總工時紀錄上限上調至 $17,600）。"
+        "為嚴防法規滯後風險，計糧精算請務必一鍵跳轉交叉核對官方最新公告："
+        "</div>", 
+        unsafe_allow_html=True
+    )
+    st.markdown("📢 **[最新法定最低工資 - 官方中文專頁](https://www.labour.gov.hk/tc/news/mwo.htm)**")
+    st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
+    st.markdown("---")
+    
+    # 📌 4. 🔗 官方權威渠道 (末尾置底)
+    st.header("🔗 官方權威渠道")
+    st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
+    st.markdown("📞 **勞工處查詢熱線：2717 1771**")
 
 # ==========================================
 # 5. 聊天與對話分流
