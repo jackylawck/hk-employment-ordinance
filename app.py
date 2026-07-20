@@ -83,7 +83,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (pdfplumber)
+# 2. RAG 本地向量資料庫引擎 (快取防禦硬化版)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
@@ -98,7 +98,6 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
                 text = page.extract_text()
                 if not text:
                     continue
-                
                 text = re.sub(r'\s+', ' ', text).strip()
                 
                 chunk_size = 400
@@ -122,20 +121,29 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
 
-def build_combined_vector_db(uploaded_files):
-    embeddings = get_embedding_model()
-    all_chunks = []
-    base_file_names = []
-    uploaded_file_names = []
-    
+# 🔥 【核心性能管治】：強行快取本地 Git 基礎法規，不重複讀寫
+@st.cache_resource(show_spinner="📚 正在對齊 562 個法規切片至內存快取...")
+def load_base_git_chunks():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
-    
+    base_chunks = []
+    base_file_names = []
     for pdf_path in base_pdf_files:
-        name = os.path.basename(pdf_path)
-        base_file_names.append(name)
-        all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
-        
+        base_file_names.append(os.path.basename(pdf_path))
+        base_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
+    return base_chunks, base_file_names
+
+# 動態混合封裝函數
+def get_runtime_vector_db(uploaded_files):
+    embeddings = get_embedding_model()
+    
+    # 1. 瞬時從快取獲取基礎切片 (耗時 0 毫秒)
+    base_chunks, base_files = load_base_git_chunks()
+    
+    all_chunks = list(base_chunks)
+    uploaded_file_names = []
+    
+    # 2. 只有當用戶真的上傳新文件時，才即時運算
     if uploaded_files:
         for uploaded_file in uploaded_files:
             uploaded_file_names.append(uploaded_file.name)
@@ -143,9 +151,8 @@ def build_combined_vector_db(uploaded_files):
             
     if all_chunks:
         vector_db = FAISS.from_documents(all_chunks, embeddings)
-        return vector_db, all_chunks, base_file_names, uploaded_file_names
-    else:
-        return None, [], [], []
+        return vector_db, all_chunks, base_files, uploaded_file_names
+    return None, [], [], []
 
 # ==========================================
 # 3. 🌐 決定性規則引擎層
@@ -159,7 +166,7 @@ class ControlGuardrails:
                 "🛑 **【最高級別合規危機預警：即時解僱風險重大】** ❌\n\n"
                 "**⚖️ 香港《僱傭條例》第 9 條法定規範：**\n"
                 "僱主只有在僱員犯下極度嚴重過失（例如：故意不服從合法合理的命令、欺詐不忠實、或慣常疏忽職責）時，"
-                "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
+                "才可以無須通知期或代通知金「即時解僱（即炒）」 。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
                 "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
                 "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
@@ -175,12 +182,12 @@ guardrails = ControlGuardrails()
 def generate_and_log_audit_trail(query, response_text):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     raw_data = f"{query}|{response_text}|{timestamp}".encode('utf-8')
-    audit_hash = hashlib.sha256(raw_data).hexdigest()[:16].upper()
+    audit_hash = hashlib.sha256(raw_data).hexligest()[:16].upper()
     logging.info(f"HashID: [{audit_hash}] | Prompt: {query}")
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染 (修復無限死循環)
+# 4. 主畫面與側邊欄渲染 (依據老闆戰略排序優化 + 記憶體解耦)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
@@ -193,21 +200,17 @@ st.warning(
 )
 
 with st.sidebar:
-    # 🛠️ 核心修正：將 file_uploader 的讀取直接傳遞給向量庫構建函數，完全移除有害的手動 rerun
-    ui_uploaded_files = st.file_uploader(
-        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
-        type=["pdf"], 
-        accept_multiple_files=True,
-        key="file_uploader_gate",
-        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
-    )
-
-    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(ui_uploaded_files)
+    
+    # 📌 1. 📊 向量資料庫審計監控 (排首位)
+    st.header("📊 向量資料庫審計監控")
+    
+    # 從 Session 獲取臨時文件對象，避免重複渲染
+    uploaded_files_ctx = st.session_state.get('web_uploaded_files', None)
+    
+    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = get_runtime_vector_db(uploaded_files_ctx)
     TOTAL_PDF_COUNT = len(BASE_FILES) + len(UPLOADED_FILES)
     TOTAL_CHUNK_COUNT = len(ALL_CHUNKS)
     
-    # 📌 1. 📊 向量資料庫審計監控
-    st.header("📊 向量資料庫審計監控")
     st.metric("當前已加載 PDF 總數", f"{TOTAL_PDF_COUNT} 份")
     st.metric("解構法規文字切片 (Chunks)", f"{TOTAL_CHUNK_COUNT} 個")
     
@@ -218,9 +221,7 @@ with st.sidebar:
     if BASE_FILES:
         for f_name in BASE_FILES:
             st.markdown(f"<div class='file-inventory'>📦 <a href='{github_repo_url}/{f_name}' target='_blank' style='color:#007bff; text-decoration:none;'>{f_name}</a></div>", unsafe_allow_html=True)
-    else:
-        st.markdown("<div class='file-inventory'>❌ 未偵測到本地法規底座</div>", unsafe_allow_html=True)
-        
+            
     if UPLOADED_FILES:
         st.markdown("**⏳ 會話臨時記憶體注入 (揮發性資料):**")
         for f_name in UPLOADED_FILES:
@@ -228,7 +229,21 @@ with st.sidebar:
             
     st.markdown("---")
     
-    # 📌 2. 💰 法定最低工資動態看板
+    # 📌 2. 📂 動態法規擴充 (排第二)
+    st.header("📂 動態法規擴充")
+    ui_files = st.file_uploader(
+        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
+        type=["pdf"], 
+        accept_multiple_files=True,
+        key="sidebar_uploader_key"
+    )
+    if ui_files != st.session_state.get('web_uploaded_files', None):
+        st.session_state['web_uploaded_files'] = ui_files
+        st.rerun()
+        
+    st.markdown("---")
+    
+    # 📌 3. 💰 法定最低工資動態看板 (排第三)
     st.header("💰 法定最低工資動態看板")
     st.markdown(
         "<div class='smw-alert-box'>"
@@ -241,7 +256,7 @@ with st.sidebar:
     st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
     st.markdown("---")
     
-    # 📌 3. 🔗 官方權威渠道
+    # 📌 4. 🔗 官方權威渠道 (排最尾)
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
