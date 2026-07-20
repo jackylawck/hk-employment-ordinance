@@ -65,13 +65,17 @@ st.markdown("""
         border-left: 2px solid #6c757d !important;
         margin-bottom: 5px !important;
     }
-    /* 告示牌專用高級樣式 */
+    /* 🚀 告示牌專用高級樣式 - 全主題高對比度硬化版 */
     .smw-alert-box {
-        background-color: #3e2723 !important;
+        background-color: #212529 !important;
         border-left: 4px solid #ffb74d !important;
-        padding: 10px !important;
+        padding: 12px !important;
         border-radius: 4px !important;
         margin-bottom: 15px !important;
+        color: #ffffff !important; /* 強制所有文字為白色，消滅淺色模式下的暗字盲區 */
+    }
+    .smw-alert-box b, .smw-alert-box strong {
+        color: #ffb74d !important; /* 強制高亮粗體字為暖橘色 */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -143,7 +147,7 @@ def build_combined_vector_db(uploaded_files):
         return None, [], [], []
 
 # ==========================================
-# 3. 🌐 決定性規則引擎層
+# 3. 🌐 決定性規則引擎層 (徹底洗淨 Citation 標記)
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
@@ -175,26 +179,24 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染 (內嵌最低工資特設權威欄)
+# 4. 主畫面與側邊欄渲染
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
 
 st.warning(
     "⚠️ **【企業合規重要聲明 & 免責宣告】**\n\n"
-    "本系統為人工智能輔助診斷工具，其檢檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**。"
+    "本系統為人工智能輔助診斷工具，其檢索與分析結果僅供企業內部 HR 風險排查與管治參考，**絕不構成正式法律意見**。"
     "AI 系統可能因語意邊界或提示詞不全而產生判斷偏差。遇到重大勞資決策，請務必以 **[特區政府勞工處官方網站](https://www.labour.gov.hk/)** "
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
-# 🚀 側邊欄高階進化版
 with st.sidebar:
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
     st.markdown("---")
     
-    # 🔥 【老細戰略硬化】：特設最低工資動態權威錨點告示牌
     st.header("💰 法定最低工資動態看板")
     st.markdown(
         "<div class='smw-alert-box'>"
@@ -257,7 +259,6 @@ with tab_chat:
         with st.chat_message("assistant"):
             final_response = ""
             
-            # 第一層網閘：精準規則攔截
             intercepted_advice = guardrails.evaluate(prompt)
             
             if intercepted_advice:
@@ -269,7 +270,6 @@ with tab_chat:
             else:
                 docs_and_scores = VECTOR_DB.similarity_search_with_score(prompt, k=3)
                 
-                # 第二層網閘：動態混合信度修正
                 top_doc, top_score = docs_and_scores[0]
                 base_confidence = max(5.0, min(95.0, (1.2 - (top_score / 2.5)) * 100))
                 
