@@ -180,7 +180,7 @@ def generate_and_log_audit_trail(query, response_text):
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染 (依據老闆戰略排序優化)
+# 4. 主畫面與側邊欄渲染 (修復無限死循環)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
@@ -192,21 +192,22 @@ st.warning(
     "發布的主體條文與指引為最終權威依歸，或尋求專業法律顧問意見。"
 )
 
-# 🚀 側邊欄：依指定優先權重新排版
 with st.sidebar:
-    
-    # 📌 1. 📊 向量資料庫審計監控 (頂置首位)
-    st.header("📊 向量資料庫審計監控")
-    
-    # 事先在內存中構建資料庫，以便動態獲取數量指標
-    # 在 file_uploader 之前先設置一個空容器，或直接將上傳組件置於下方，代碼動態抓取
-    if 'temp_uploaded_files' not in st.session_state:
-        st.session_state.temp_uploaded_files = None
-        
-    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(st.session_state.temp_uploaded_files)
+    # 🛠️ 核心修正：將 file_uploader 的讀取直接傳遞給向量庫構建函數，完全移除有害的手動 rerun
+    ui_uploaded_files = st.file_uploader(
+        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
+        type=["pdf"], 
+        accept_multiple_files=True,
+        key="file_uploader_gate",
+        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
+    )
+
+    VECTOR_DB, ALL_CHUNKS, BASE_FILES, UPLOADED_FILES = build_combined_vector_db(ui_uploaded_files)
     TOTAL_PDF_COUNT = len(BASE_FILES) + len(UPLOADED_FILES)
     TOTAL_CHUNK_COUNT = len(ALL_CHUNKS)
     
+    # 📌 1. 📊 向量資料庫審計監控
+    st.header("📊 向量資料庫審計監控")
     st.metric("當前已加載 PDF 總數", f"{TOTAL_PDF_COUNT} 份")
     st.metric("解構法規文字切片 (Chunks)", f"{TOTAL_CHUNK_COUNT} 個")
     
@@ -227,23 +228,7 @@ with st.sidebar:
             
     st.markdown("---")
     
-    # 📌 2. 📂 動態法規擴充 (第二順位)
-    st.header("📂 動態法規擴充")
-    ui_uploaded_files = st.file_uploader(
-        "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
-        type=["pdf"], 
-        accept_multiple_files=True,
-        key="file_uploader_gate",
-        help="上傳之文件僅保存在當前暫存記憶體內，網頁關閉即全量銷毀，完全對齊數據最小化隱私標準。"
-    )
-    # 狀態同步鎖，確保即時刷新監控看板
-    if ui_uploaded_files != st.session_state.temp_uploaded_files:
-        st.session_state.temp_uploaded_files = ui_uploaded_files
-        st.rerun()
-        
-    st.markdown("---")
-    
-    # 📌 3. 💰 法定最低工資動態看板 (第三順位)
+    # 📌 2. 💰 法定最低工資動態看板
     st.header("💰 法定最低工資動態看板")
     st.markdown(
         "<div class='smw-alert-box'>"
@@ -256,7 +241,7 @@ with st.sidebar:
     st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
     st.markdown("---")
     
-    # 📌 4. 🔗 官方權威渠道 (末尾置底)
+    # 📌 3. 🔗 官方權威渠道
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
