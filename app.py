@@ -5,8 +5,8 @@ import hashlib
 import logging
 from datetime import datetime
 
-# 引入 RAG 必備組件
-from pypdf import PdfReader
+# 🎯 核心更換：引入更強大的 PDF 文字提取引擎
+import pdfplumber
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
@@ -65,17 +65,16 @@ st.markdown("""
         border-left: 2px solid #6c757d !important;
         margin-bottom: 5px !important;
     }
-    /* 🚀 告示牌專用高級樣式 - 全主題高對比度硬化版 */
     .smw-alert-box {
         background-color: #212529 !important;
         border-left: 4px solid #ffb74d !important;
         padding: 12px !important;
         border-radius: 4px !important;
         margin-bottom: 15px !important;
-        color: #ffffff !important; /* 強制所有文字為白色，消滅淺色模式下的暗字盲區 */
+        color: #ffffff !important;
     }
     .smw-alert-box b, .smw-alert-box strong {
-        color: #ffb74d !important; /* 強制高亮粗體字為暖橘色 */
+        color: #ffb74d !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -84,7 +83,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎
+# 2. RAG 本地向量資料庫引擎 (pdfplumber 強力解鎖版)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
 def get_embedding_model():
@@ -94,29 +93,33 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
     filename = pdf_file.name if is_uploaded else os.path.basename(pdf_file)
     chunks = []
     try:
-        reader = PdfReader(pdf_file)
-        for page_num, page in enumerate(reader.pages, start=1):
-            text = page.extract_text()
-            if not text:
-                continue
-            
-            chunk_size = 300
-            overlap = 50
-            start = 0
-            while start < len(text):
-                end = start + chunk_size
-                chunk_text = text[start:end]
+        # 🔥 改用 pdfplumber 開啟，徹底解鎖複雜版面與中文字型
+        with pdfplumber.open(pdf_file) as pdf:
+            for page_num, page in enumerate(pdf.pages, start=1):
+                text = page.extract_text()
+                if not text:
+                    continue
                 
-                doc = Document(
-                    page_content=chunk_text,
-                    metadata={
-                        "source": filename,
-                        "page": page_num,
-                        "hash": hashlib.md5(chunk_text.encode('utf-8')).hexdigest()[:8]
-                    }
-                )
-                chunks.append(doc)
-                start += (chunk_size - overlap)
+                # 清理異常多餘的空白字元，保持法規整潔度
+                text = re.sub(r'\s+', ' ', text).strip()
+                
+                chunk_size = 400  # 稍微擴大視野範圍
+                overlap = 80
+                start = 0
+                while start < len(text):
+                    end = start + chunk_size
+                    chunk_text = text[start:end]
+                    
+                    doc = Document(
+                        page_content=chunk_text,
+                        metadata={
+                            "source": filename,
+                            "page": page_num,
+                            "hash": hashlib.md5(chunk_text.encode('utf-8')).hexdigest()[:8]
+                        }
+                    )
+                    chunks.append(doc)
+                    start += (chunk_size - overlap)
     except Exception as e:
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
@@ -133,6 +136,7 @@ def build_combined_vector_db(uploaded_files):
     for pdf_path in base_pdf_files:
         name = os.path.basename(pdf_path)
         base_file_names.append(name)
+        # 直接傳遞路徑字串給處理函數
         all_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
         
     if uploaded_files:
@@ -147,7 +151,7 @@ def build_combined_vector_db(uploaded_files):
         return None, [], [], []
 
 # ==========================================
-# 3. 🌐 決定性規則引擎層 (徹底洗淨 Citation 標記)
+# 3. 🌐 決定性規則引擎層
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
