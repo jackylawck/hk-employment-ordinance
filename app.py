@@ -84,7 +84,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (極致快取與記憶體優化版)
+# 2. RAG 本地向量資料庫引擎 (快取防禦版)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在加載本地 Embedding 模型...")
 def get_embedding_model():
@@ -122,7 +122,6 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
 
-# 🚀 核心優化：將「562 個切片 + FAISS 向量庫」全量快取，只計算一次，永不重複載入
 @st.cache_resource(show_spinner="📚 正在構建 FAISS 向量數據庫 (僅啟動時執行一次)...")
 def build_cached_base_vector_db():
     embeddings = get_embedding_model()
@@ -137,20 +136,16 @@ def build_cached_base_vector_db():
         
     if base_chunks:
         vector_db = FAISS.from_documents(base_chunks, embeddings)
-        gc.collect() # 強制垃圾回收，釋放 PDF 提取過渡內存
+        gc.collect()
         return vector_db, base_chunks, base_file_names
     return None, [], []
 
-# 運行時混合調用
 def get_runtime_vector_db(uploaded_files):
-    # 秒速獲取快取好的底座，0 毫秒延遲！
     base_vector_db, base_chunks, base_files = build_cached_base_vector_db()
     
-    # 如果沒有動態上傳文件，直接返回快取好的向量庫
     if not uploaded_files:
         return base_vector_db, base_chunks, base_files, []
         
-    # 若有動態上傳，才在記憶體中臨時合併
     embeddings = get_embedding_model()
     all_chunks = list(base_chunks)
     uploaded_file_names = []
@@ -163,26 +158,66 @@ def get_runtime_vector_db(uploaded_files):
     return runtime_db, all_chunks, base_files, uploaded_file_names
 
 # ==========================================
-# 3. 🌐 決定性規則引擎層
+# 3. 🌐 決定性規則引擎層 (精準三重網閘硬化)
 # ==========================================
 class ControlGuardrails:
     def evaluate(self, query):
         q = query.lower()
+        
+        # 🚨 第一重網閘：即時解僱風險攔截
         if any(w in q for w in ["唔聽話", "想炒", "即炒", "炒佢", "解僱", "不服從"]):
             return (
                 "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
                 "🛑 **【最高級別合規危機預警：即時解僱風險重大】** ❌\n\n"
                 "**⚖️ 香港《僱傭條例》第 9 條法定規範：**\n"
                 "僱主只有在僱員犯下極度嚴重過失（例如：故意不服從合法合理的命令、欺詐不忠實、或慣常疏忽職責）時，"
-                "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
+                "才可以無須通知期或代通知金「即時解僱（即炒）」[cite: 1, 4]。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
                 "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
-                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
-                "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索處分。\n\n"
+                "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**[cite: 1, 4]。"
+                "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索處分[cite: 1, 4]。\n\n"
                 "**🛡️ 營運管治指引：**\n"
                 "1. **切勿**在情緒激動下口頭宣告解僱，必須即時通報 HR 啟動標準調查程序。\n"
-                "2. 嚴格審查考勤系統，確認該員工是否正處於 **「懷孕生育保障期」** 或 **「有薪病假期間」**，這兩類情境即炒屬刑事罪行，最高罰款 10 萬元！"
+                "2. 嚴格審查考勤系統，確認該員工是否正處於 **「懷孕生育保障期」** 或 **「有薪病假期間」**，這兩類情境即炒屬刑事罪行，最高罰款 10 萬元[cite: 1, 4]！"
             )
+            
+        # 🚨 第二重網閘：468 / 418 連續性合約修訂精準攔截
+        if any(w in q for w in ["468", "418", "連續性合約", "連續性僱傭"]):
+            return (
+                "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
+                "⚖️ **【2026年「連續性合約」新舊制度核心差異與 HR 管治應對】**\n\n"
+                "**1. 舊制「418」規定（2026年1月18日前）：**\n"
+                "僱員須連續受僱於同一僱主 4 星期或以上，且**每星期均須工作最少 18 小時**，方符合「連續性合約」[cite: 1, 3]。\n\n"
+                "**2. 最新「468」新制（2026年1月18日起生效）：**\n"
+                "門檻進一步放寬，符合以下**任一條件**即屬「連續性合約」[cite: 1, 3]：\n"
+                "• **條件 (i)**：每星期最少工作 **17 小時**（週門檻由 18 下調至 17）[cite: 1, 3]；或\n"
+                "• **條件 (ii) - 「468」四週合計準則**：若某星期不足 17 小時，只要該星期與緊接過去三星期（共 4 星期）的**總工時合計不少於 68 小時**，該星期仍算入連續性受僱[cite: 1, 3]！\n\n"
+                "**🛡️ HR 企業級管治應對策略（Board & HR Action Plan）：**\n"
+                "1. **排班系統 (Roster Engine) 重構**：徹底檢視兼職/炒場員工的排班表，防止前線主管誤以為『某週排 10 小時就不會撞 418』，在『468』新制下此舉會直接觸發合規門檻[cite: 1, 3]！\n"
+                "2. **考勤與薪酬數據審計**：備存過去 12 個月完整的工時紀錄（工時低於 $17,600 月薪上限者必須記工時）[cite: 1, 4]，嚴防因漏計而引發遣散費、年假或病假津貼的追討申索[cite: 1, 4]。\n"
+                "3. **合規追溯**：[點此查閱勞工處《修訂連續性合約 FAQ》官方原檔](https://github.com/jackylawck/hk-employment-ordinance/blob/main/continuous_contract_FAQ_tc.pdf)[cite: 3]"
+            )
+
+        # 🚨 第三重網閘：12個月平均工資 (ADW) 713 條例 / 剔除期精準硬化 (解決答非所問)
+        if any(w in q for w in ["adw", "713", "剔除期", "不予計算在內", "平均工資"]):
+            return (
+                "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
+                "⚖️ **【香港《僱傭條例》( Cap. 57) - 12 個月平均工資 (ADW) 與「剔除期」權威規範】**\n\n"
+                "**1. 什麼是『剔除期』（不予計算在內的期間及工資）？**\n"
+                "根據《2007年僱傭（修訂）條例》（簡稱 713 條例），為**避免平均工資被拉低**而損害僱員的法定權益，"
+                "在計算過去 12 個月的每日（或每月）平均工資（ADW）時，僱主**必須剔除**僱員獲支付少於全薪的期間及相關工資[cite: 1, 4]。\n\n"
+                "**2. 法定須剔除的 2 大核心情境：**\n"
+                "• **(i) 放取法定少於全薪或無薪假期**：包括 4/5 薪疾病津貼[cite: 1, 4]、4/5 薪產假[cite: 1, 4]/侍產假[cite: 1, 4]、工傷病假[cite: 1, 4]、或獲僱主同意的無薪假[cite: 1, 4]；\n"
+                "• **(ii) 正常工作日不獲提供工作**：例如因業務停頓而停工的無薪日子[cite: 1, 4]。\n\n"
+                "**📊 計算公式 (Formula)：**\n"
+                "$$\\text{每日平均工資 (ADW)} = \\frac{12 \\text{ 個月工資總額} - \\text{須剔除的假期款額}}{365 \\text{ 天} - \\text{須剔除的假期天數}}$$\n\n"
+                "**💡 HR 實務例子（以 14 星期產假為例）：**\n"
+                "若僱員過去 12 個月中放取了 14 星期（98 天）的 4/5 薪產假[cite: 1, 4]：\n"
+                "• **分子（金額）**：12 個月總收入 減去 14 星期已領取的產假薪酬[cite: 1, 4]；\n"
+                "• **分母（天數）**：365 天 減去 98 天（即以 267 天作為分母計算）[cite: 1, 4]。\n\n"
+                "**🔍 審計追溯鏈 (Traceability Link):** [EO_guide_full_tc.pdf 附錄一第 48-51 頁]"
+            )
+            
         return None
 
 guardrails = ControlGuardrails()
@@ -208,7 +243,6 @@ st.warning(
 )
 
 with st.sidebar:
-    # 📌 1. 📊 向量資料庫審計監控
     st.header("📊 向量資料庫審計監控")
     
     uploaded_files_ctx = st.session_state.get('sidebar_uploader_key', None)
@@ -235,7 +269,6 @@ with st.sidebar:
             
     st.markdown("---")
     
-    # 📌 2. 📂 動態法規擴充
     st.header("📂 動態法規擴充")
     st.file_uploader(
         "上傳最新勞工處 PDF 文件 (如新政策指引/FAQ)", 
@@ -245,7 +278,6 @@ with st.sidebar:
     )
     st.markdown("---")
     
-    # 📌 3. 💰 法定最低工資動態看板
     st.header("💰 法定最低工資動態看板")
     st.markdown(
         "<div class='smw-alert-box'>"
@@ -258,7 +290,6 @@ with st.sidebar:
     st.markdown("📢 **[Statutory Minimum Wage - Official English Page](https://www.labour.gov.hk/eng/news/mwo.htm)**")
     st.markdown("---")
     
-    # 📌 4. 🔗 官方權威渠道
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
@@ -295,10 +326,10 @@ with tab_chat:
                 top_doc, top_score = docs_and_scores[0]
                 base_confidence = max(5.0, min(95.0, (1.2 - (top_score / 2.5)) * 100))
                 
+                # 🔥 修正處：移除過於寬鬆的 "工資" 加分，改為精準動態加分
                 boost_score = 0
                 q_lower = prompt.lower()
-                if "468" in q_lower or "連續性" in q_lower: boost_score += 65
-                if any(w in q_lower for w in ["減人工", "扣薪", "扣錢", "工資"]): boost_score += 60
+                if any(w in q_lower for w in ["減人工", "扣薪", "扣錢"]): boost_score += 60
                 if any(w in q_lower for w in ["減福利", "改合約", "更改條款"]): boost_score += 60
                 
                 final_confidence = max(base_confidence, boost_score)
