@@ -3,6 +3,7 @@ import os
 import re
 import hashlib
 import logging
+import gc
 from datetime import datetime
 
 # 引入強力 PDF 文字提取引擎
@@ -83,9 +84,9 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (快取防禦版)
+# 2. RAG 本地向量資料庫引擎 (極致快取與記憶體優化版)
 # ==========================================
-@st.cache_resource(show_spinner="🛡️ 正在初始化本地 Embedding 引擎...")
+@st.cache_resource(show_spinner="🛡️ 正在加載本地 Embedding 模型...")
 def get_embedding_model():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
@@ -121,35 +122,45 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
 
-# 🚀 性能緩釋：永久快取 Git 固定法規底座
-@st.cache_resource(show_spinner="📚 正在對齊 562 個法規切片至內存快取...")
-def load_base_git_chunks():
+# 🚀 核心優化：將「562 個切片 + FAISS 向量庫」全量快取，只計算一次，永不重複載入
+@st.cache_resource(show_spinner="📚 正在構建 FAISS 向量數據庫 (僅啟動時執行一次)...")
+def build_cached_base_vector_db():
+    embeddings = get_embedding_model()
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_pdf_files = [os.path.join(current_dir, f) for f in os.listdir(current_dir) if f.endswith('.pdf')]
     base_chunks = []
     base_file_names = []
+    
     for pdf_path in base_pdf_files:
         base_file_names.append(os.path.basename(pdf_path))
         base_chunks.extend(process_pdf_to_chunks(pdf_path, is_uploaded=False))
-    return base_chunks, base_file_names
+        
+    if base_chunks:
+        vector_db = FAISS.from_documents(base_chunks, embeddings)
+        gc.collect() # 強制垃圾回收，釋放 PDF 提取過渡內存
+        return vector_db, base_chunks, base_file_names
+    return None, [], []
 
-# 運行時混合向量庫建構 (解耦上傳流與快取流)
+# 運行時混合調用
 def get_runtime_vector_db(uploaded_files):
-    embeddings = get_embedding_model()
-    base_chunks, base_files = load_base_git_chunks()
+    # 秒速獲取快取好的底座，0 毫秒延遲！
+    base_vector_db, base_chunks, base_files = build_cached_base_vector_db()
     
+    # 如果沒有動態上傳文件，直接返回快取好的向量庫
+    if not uploaded_files:
+        return base_vector_db, base_chunks, base_files, []
+        
+    # 若有動態上傳，才在記憶體中臨時合併
+    embeddings = get_embedding_model()
     all_chunks = list(base_chunks)
     uploaded_file_names = []
     
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
-            uploaded_file_names.append(uploaded_file.name)
-            all_chunks.extend(process_pdf_to_chunks(uploaded_file, is_uploaded=True))
-            
-    if all_chunks:
-        vector_db = FAISS.from_documents(all_chunks, embeddings)
-        return vector_db, all_chunks, base_files, uploaded_file_names
-    return None, [], [], []
+    for uploaded_file in uploaded_files:
+        uploaded_file_names.append(uploaded_file.name)
+        all_chunks.extend(process_pdf_to_chunks(uploaded_file, is_uploaded=True))
+        
+    runtime_db = FAISS.from_documents(all_chunks, embeddings)
+    return runtime_db, all_chunks, base_files, uploaded_file_names
 
 # ==========================================
 # 3. 🌐 決定性規則引擎層
@@ -163,9 +174,9 @@ class ControlGuardrails:
                 "🛑 **【最高級別合規危機預警：即時解僱風險重大】** ❌\n\n"
                 "**⚖️ 香港《僱傭條例》第 9 條法定規範：**\n"
                 "僱主只有在僱員犯下極度嚴重過失（例如：故意不服從合法合理的命令、欺詐不忠實、或慣常疏忽職責）時，"
-                "才可以無須通知期或代通知金「即時解僱（即炒）」 。\n\n"
+                "才可以無須通知期或代通知金「即時解僱（即炒）」。\n\n"
                 "**🚨 董事會級別合規紅線：**\n"
-                "主管口中的『唔聽話』或表现不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
+                "主管口中的『唔聽話』或表現不佳，流於主管主觀感受。若企業缺乏多次清晰的**書面警告信（Warning Letter）**、"
                 "績效改善計劃（PIP）及漸進式紀律處分紀錄，單憑口頭頂撞或表現差而即炒，**在勞資審裁處必被判定為「不合理解僱」**。"
                 "企業將面臨補付代通知金、追溯法定福利甚至高達 HK$150,000 補償金的嚴厲申索處分。\n\n"
                 "**🛡️ 營運管治指引：**\n"
@@ -179,7 +190,6 @@ guardrails = ControlGuardrails()
 def generate_and_log_audit_trail(query, response_text):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     raw_data = f"{query}|{response_text}|{timestamp}".encode('utf-8')
-    # 🔥 核心修正：將 hexligest() 修正為 hexdigest()，徹底解決 AttributeError
     audit_hash = hashlib.sha256(raw_data).hexdigest()[:16].upper()
     logging.info(f"HashID: [{audit_hash}] | Prompt: {query}")
     return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
@@ -198,7 +208,6 @@ st.warning(
 )
 
 with st.sidebar:
-    
     # 📌 1. 📊 向量資料庫審計監控
     st.header("📊 向量資料庫審計監控")
     
@@ -324,7 +333,6 @@ with tab_chat:
                             )
                             final_response += f"[{source_file} Page {page_num}]: {doc.page_content}\n\n"
             
-            # 🔒 經過洗淨的安全審計追溯生成
             audit_html = generate_and_log_audit_trail(prompt, final_response)
             st.markdown(audit_html, unsafe_allow_html=True)
             st.session_state.messages.append({"role": "assistant", "content": final_response + audit_html})
