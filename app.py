@@ -4,7 +4,7 @@ import re
 import hashlib
 import logging
 import gc
-from datetime import datetime
+from datetime import datetime, timezone
 
 # 引入強力 PDF 文字提取引擎
 import pdfplumber
@@ -13,7 +13,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 
 # ==========================================
-# 0. 企業級審計日誌初始化
+# 0. 企業級審計日誌初始化 (ISO 42001 脫敏版)
 # ==========================================
 logging.basicConfig(
     filename='compliance_audit.log', 
@@ -22,16 +22,31 @@ logging.basicConfig(
 )
 
 # ==========================================
-# 1. 頁面配置與 UI 初始化
+# 1. 頁面配置與 SEO / GSC / 創作者標記注入
 # ==========================================
 st.set_page_config(
-    page_title="HK Cap. 57 RAG Enterprise Advisor",
+    page_title="HK Cap. 57 RAG Compliance Advisor | 羅子淇 Jacky Law",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# 🔍 GSC 驗證 + 雙語 SEO Meta 標籤 + 創作者屬性 (羅子淇 Jacky Law)
 st.markdown("""
+    <!-- Google Search Console 驗證標記 -->
+    <meta name="google-site-verification" content="8oplCfxMueI0Pdne3EAGywo9z_WaxkXyxtFi4eZRy90" />
+
+    <!-- 基礎雙語 SEO Meta 標籤 -->
+    <meta name="description" content="Hong Kong Cap. 57 Employment Ordinance RAG Compliance Advisor by Jacky Law (羅子淇). Privacy-preserving AI system for HR risk management, ADW 713 calculations, and 468 continuous contract rules." />
+    <meta name="keywords" content="HK Employment Ordinance, Cap 57, 香港僱傭條例, 勞工法例, 羅子淇, Jacky Law, AI Governance, ISO 42001, 468新制, 713條例, ADW, RAG, HR Tech, Legal Tech" />
+    <meta name="author" content="羅子淇 Jacky Law" />
+
+    <!-- Open Graph (OG) 社群分享 SEO 標籤 -->
+    <meta property="og:title" content="HK Cap. 57 Employment Ordinance RAG Advisor | 羅子淇 Jacky Law" />
+    <meta property="og:description" content="An enterprise-grade, privacy-preserving AI compliance workstation for Hong Kong Employment Ordinance (Cap. 57) powered by Local RAG." />
+    <meta property="og:type" content="website" />
+    <meta property="og:author" content="羅子淇 Jacky Law" />
+
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -77,6 +92,12 @@ st.markdown("""
     .smw-alert-box b, .smw-alert-box strong {
         color: #ffb74d !important;
     }
+    .author-badge {
+        font-size: 0.8em;
+        color: #6c757d;
+        margin-top: -10px;
+        margin-bottom: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -84,7 +105,7 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # ==========================================
-# 2. RAG 本地向量資料庫引擎 (快取防禦版)
+# 2. RAG 本地向量資料庫引擎 (快取防禦 & 記憶體釋放版)
 # ==========================================
 @st.cache_resource(show_spinner="🛡️ 正在加載本地 Embedding 模型...")
 def get_embedding_model():
@@ -97,6 +118,7 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
         with pdfplumber.open(pdf_file) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
                 text = page.extract_text()
+                del page  # 🧹 審計修復：即時釋放單頁物件記憶體，防範 OOM
                 if not text:
                     continue
                 text = re.sub(r'\s+', ' ', text).strip()
@@ -118,6 +140,7 @@ def process_pdf_to_chunks(pdf_file, is_uploaded=False):
                     )
                     chunks.append(doc)
                     start += (chunk_size - overlap)
+            gc.collect()  # 🧹 審計修復：強制垃圾回收
     except Exception as e:
         logging.error(f"Error processing PDF {filename}: {str(e)}")
     return chunks
@@ -198,7 +221,7 @@ class ControlGuardrails:
                 "3. **合規追溯**：[點此查閱勞工處《修訂連續性合約 FAQ》官方原檔](https://github.com/jackylawck/hk-employment-ordinance/blob/main/continuous_contract_FAQ_tc.pdf)[cite: 3]"
             )
 
-        # 🚨 第三重網閘：12個月平均工資 (ADW) 713 條例 / 剔除期精準硬化 (解決答非所問)
+        # 🚨 第三重網閘：12個月平均工資 (ADW) 713 條例 / 剔除期精準硬化
         if any(w in q for w in ["adw", "713", "剔除期", "不予計算在內", "平均工資"]):
             return (
                 "<div class='confidence-badge'>🎯 匹配置信度：100.0% (決定性法規攔截)</div>\n\n"
@@ -215,7 +238,7 @@ class ControlGuardrails:
                 "若僱員過去 12 個月中放取了 14 星期（98 天）的 4/5 薪產假[cite: 1, 4]：\n"
                 "• **分子（金額）**：12 個月總收入 減去 14 星期已領取的產假薪酬[cite: 1, 4]；\n"
                 "• **分母（天數）**：365 天 減去 98 天（即以 267 天作為分母計算）[cite: 1, 4]。\n\n"
-                "**🔍 審計追溯鏈 (Traceability Link):** [EO_guide_full_tc.pdf 附錄一第 48-51 頁]"
+                "**🔍 審計追溯鏈 (Traceability Link):** [EO_guide_full_tc.pdf 附錄一第 48-51 頁][cite: 1]"
             )
             
         return None
@@ -223,17 +246,24 @@ class ControlGuardrails:
 guardrails = ControlGuardrails()
 
 def generate_and_log_audit_trail(query, response_text):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+    # ⏱️ 審計修復：強制使用 ISO/IEC 標準 UTC 時間，確保法務舉證有效
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    # 🔒 密碼學修復：全量 64 位 SHA-256 哈希值
     raw_data = f"{query}|{response_text}|{timestamp}".encode('utf-8')
-    audit_hash = hashlib.sha256(raw_data).hexdigest()[:16].upper()
-    logging.info(f"HashID: [{audit_hash}] | Prompt: {query}")
-    return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {audit_hash} | Timestamp: {timestamp} (Log secured to local ledger)</div>"
+    full_audit_hash = hashlib.sha256(raw_data).hexdigest().upper()
+    display_hash = full_audit_hash[:16]
+    
+    # 🛡️ 隱私合規修復：後台日誌寫入全量 HashID，絕不記錄用戶 Query 明文，滿足 Data Minimization
+    logging.info(f"AuditID: [{full_audit_hash}] | Status: Processed | Timestamp: {timestamp}")
+    return f"<div class='audit-trail'>🔒 ISO 42001 Cryptographic Audit ID: {display_hash} | Creator: 羅子淇 Jacky Law | Timestamp: {timestamp} (Log secured to local ledger)</div>"
 
 # ==========================================
-# 4. 主畫面與側邊欄渲染
+# 4. 主畫面與側邊欄渲染 (包含創作者標示)
 # ==========================================
 st.title("⚖️ Cap. 57 Employment Ordinance Advisor")
 st.subheader("RAG 向量資料庫架構 • 具備動態防禦網閘與語意追溯")
+st.markdown("<div class='author-badge'>👨‍💻 <b>System Architect & AI Governance Lead:</b> 羅子淇 Jacky Law</div>", unsafe_allow_html=True)
 
 st.warning(
     "⚠️ **【企業合規重要聲明 & 免責宣告】**\n\n"
@@ -293,6 +323,8 @@ with st.sidebar:
     st.header("🔗 官方權威渠道")
     st.markdown("🌐 **[香港特區政府勞工處官網](https://www.labour.gov.hk/)**")
     st.markdown("📞 **勞工處查詢熱線：2717 1771**")
+    st.markdown("---")
+    st.caption("© 2026 羅子淇 Jacky Law | Cap. 57 Compliance RAG Architecture")
 
 # ==========================================
 # 5. 聊天與對話分流
@@ -326,7 +358,6 @@ with tab_chat:
                 top_doc, top_score = docs_and_scores[0]
                 base_confidence = max(5.0, min(95.0, (1.2 - (top_score / 2.5)) * 100))
                 
-                # 🔥 修正處：移除過於寬鬆的 "工資" 加分，改為精準動態加分
                 boost_score = 0
                 q_lower = prompt.lower()
                 if any(w in q_lower for w in ["減人工", "扣薪", "扣錢"]): boost_score += 60
