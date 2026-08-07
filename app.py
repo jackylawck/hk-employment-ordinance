@@ -33,9 +33,6 @@ st.set_page_config(
 
 # 🔍 GSC 驗證 + 雙語 SEO Meta 標籤 + 創作者屬性 (羅子淇 Jacky Law)
 st.markdown("""
-    <!-- Google Search Console 驗證標記 -->
-    <meta name="google-site-verification" content="8oplCfxMueI0Pdne3EAGywo9z_WaxkXyxtFi4eZRy90" />
-
     <!-- 基礎雙語 SEO Meta 標籤 -->
     <meta name="description" content="Hong Kong Cap. 57 Employment Ordinance RAG Compliance Advisor by Jacky Law (羅子淇). Privacy-preserving AI system for HR risk management, ADW 713 calculations, and 468 continuous contract rules." />
     <meta name="keywords" content="HK Employment Ordinance, Cap 57, 香港僱傭條例, 勞工法例, 羅子淇, Jacky Law, AI Governance, ISO 42001, 468新制, 713條例, ADW, RAG, HR Tech, Legal Tech" />
