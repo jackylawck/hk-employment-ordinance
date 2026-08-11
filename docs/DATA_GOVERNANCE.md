@@ -1,17 +1,12 @@
-# Data Lineage & Governance Specification (DATA_GOVERNANCE.md)
+# Data Lineage Specification / 數據血統與治理規範
 
-## 1. Compliance Alignment
-* **Standards**: EU AI Act Article 10 (Data Governance), ISO 42001 Annex A.7 (Data for AI Systems), NIST AI RMF MAP 2.1 & MEASURE 2.2.
+## 1. Data Source Authority / 數據源權威性
+All ingested data originates strictly from official HKSAR Labour Department publications:
+所有向量庫數據嚴格萃取自香港特別行政區勞工處官方權威出版物：
+1. *A Concise Guide to the Employment Ordinance (Cap. 57)* / 《僱傭條例簡明指南》
+2. *FAQ on Revised Continuous Contract (468 Rule)* / 《修訂連續性合約 FAQ》
 
-## 2. Data Lineage & Authority
-All data ingested into the vector database originates exclusively from official, publicly released Hong Kong Special Administrative Region (HKSAR) Labour Department publications.
-
-* **Primary Corpus**:
-  1. *A Concise Guide to the Employment Ordinance (Cap. 57)* [HKSAR Labour Department]
-  2. *Frequently Asked Questions on Revised "Continuous Contract" (468 Rule)* [HKSAR Labour Department]
-
-## 3. Data Processing Pipeline & Quality Assurance
-1. **Extraction**: Parsed using `pdfplumber` for table-aware, multi-lingual text extraction.
-2. **Normalization**: Whitespace collapse, redundant header/footer stripping via regex (`re.sub(r'\s+', ' ', text)`).
-3. **Chunking Parameters**: `chunk_size = 400`, `overlap = 80`.
-4. **Validation**: Chunks containing less than 10 words or non-character noise are automatically discarded during index construction.
+## 2. Processing Parameters / 數據處理參數
+* **Extraction Engine / 提取引擎**: `pdfplumber` (Table-aware)
+* **Chunking Metrics / 切片參數**: `chunk_size = 400`, `overlap = 80`
+* **Total Asset Chunks / 數據切片總數**: 562 Verified Vector Chunks / 562 個已驗證向量切片
